@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeMirror with Dracula Theme</title>
+
+    <!-- Include CodeMirror core CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.3/codemirror.css">
+
+    <!-- Include Dracula theme CSS (this is the dark theme) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.3/theme/dracula.css">
+
+    <!-- Include CodeMirror core JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.3/codemirror.js"></script>
+
+    <!-- Include mode for RISC-V (or any language you want) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.3/mode/clike/clike.js"></script>
+    
+    <!-- You can also include a mode for your custom language, like RISC-V -->
+    <script>
+        // Define a simple custom mode for RISC-V (or modify as needed)
+        CodeMirror.defineSimpleMode('riscv', {
+            start: [
+                { regex: /\b(?:add|sub|and|or|xor|lw|sw|jal|jalr|beq|bne)\b/, token: 'keyword' },
+                { regex: /\b(?:x[0-9]|ra|sp|gp|tp|t[0-6]|s[0-11]|a[0-7])\b/, token: 'variable' },
+                { regex: /#[^\n]*/, token: 'comment' },
+                { regex: /\b-?(?:0x[0-9a-fA-F]+|\d+)\b/, token: 'number' },
+                { regex: /[,:]/, token: 'operator' },
+            ],
+            meta: {
+                lineComment: '#'
+            }
+        });
+    </script>
+</head>
+<body>
+    <textarea id="editor"></textarea>
+
+    <script>
+        // Initialize the CodeMirror editor
+        const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            mode: 'riscv',  // Using the RISCV mode for syntax highlighting
+            theme: 'dracula',  // Apply the Dracula dark theme
+            lineNumbers: true,  // Show line numbers
+            matchBrackets: true,  // Highlight matching brackets
+            autoCloseBrackets: true,  // Auto close brackets
+        });
+
+        // Add some initial code to test the syntax highlighting
+        editor.setValue(`
+            add x1, x2, x3
+            sub x4, x5, x6
+            # This is a comment
+            0x1000
+        `);
+    </script>
+</body>
+</html>

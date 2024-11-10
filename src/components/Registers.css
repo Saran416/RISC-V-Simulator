@@ -1,0 +1,61 @@
+.registers{
+    background-color: #282a36;
+    font-size: 1.5em;
+    width: 25vw;
+    height: 80%;
+    display: flex;
+    overflow-y: auto;
+    overflow: scroll;
+    .table{
+        width: 100%;
+    }
+    .table{
+        display: flex;
+        flex-direction: column;
+        align-items: space-between;
+        justify-content: flex-start;
+        padding: 0.5em;
+    }
+    .thead{
+        background-color: #44475a;
+        color: white;
+        display: flex;
+        flex-direction: row;
+        align-items: space-between;
+        justify-content: flex-start;
+    }
+    .row{
+        display: flex;
+        flex-direction: row;
+        align-items: space-between;
+        justify-content: flex-start;
+        margin-top: 0.5em;
+    }
+    .regs-name{
+        text-align: center;
+        background-color: #44475a;
+        width: 30%;
+        color: white;
+        margin-right: 1em;
+        border-radius: 0.1em;
+    }
+    .regs-name-title{
+        text-align: center;
+        width: 20%;
+        color: white;
+        margin-right: 2em;
+    }
+    .regs-value-title{
+        text-align: center;
+        width: 100%;
+        color: white;
+        margin-right: 1em;
+    }
+    .regs-value{
+        text-align: end;
+        width: 100%;
+        background-color: #44475a;
+        color: white;
+        border-radius: 0.1em;
+    }
+}

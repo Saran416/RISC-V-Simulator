@@ -1,0 +1,35 @@
+.mem{
+    margin-top: 2em;
+    width: 100%;
+}
+
+.row-title{
+    background-color: #44475a;
+    display: flex;
+    flex-direction: row;
+    align-items: space-between;
+    justify-content: space-between;
+    h1{
+        color: #f8f8f2;
+        font-size: 1.5em;
+        margin-left: 1em;
+    }
+}
+
+.row{
+    background-color: #282a36;
+    display: flex;
+    flex-direction: row;
+    align-items: space-between;
+    justify-content: space-between;
+    margin-top: 0.5em;
+}
+
+.mem-address{
+    font-size: 1.5em;
+    margin-left: 1em;
+}
+
+.mem-byte{
+    font-size: 1.5em;
+}
