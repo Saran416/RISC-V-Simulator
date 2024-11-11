@@ -1,15 +1,21 @@
 import React, { useEffect } from 'react';
 import './Mem.css';
+import { useContext } from 'react';
+import { DataContext } from '../context/DataContext.jsx'
 
 const Mem = () => {
-  const [mem, setMem] = React.useState(new Array(0x50000).fill(0)); // Initialize memory with dummy values
+  const [mem, setMem] = React.useState(new Array(500).fill(0)); // Initialize memory with dummy values
   const baseAddress = 0x10000;
   const rowsPerPage = 20;
   const [startIndex, setStartIndex] = React.useState(0);
 
-  useEffect(() => {
-    // Simulate memory update or initialization if needed.
-  }, []);
+  // const { data } = useContext(DataContext);
+  // update mem from data
+  // useEffect(() => {
+  //   if (data) {
+  //     setMem(data.memory);
+  //   }
+  // }, [data]);
 
   const handleNextPage = () => {
     setStartIndex(prevIndex => prevIndex + rowsPerPage);

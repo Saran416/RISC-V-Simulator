@@ -6,7 +6,7 @@ import Memory from './pages/Memory.jsx'
 import { Navigate } from 'react-router-dom'
 
 const App = () => {
-  return (
+  return (  
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />

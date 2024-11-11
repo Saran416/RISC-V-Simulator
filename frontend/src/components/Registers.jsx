@@ -1,7 +1,10 @@
-import React, { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './Registers.css'
+import { useContext } from 'react'
+import { DataContext } from '../context/DataContext.jsx'
 
 const Registers = () => {
+    // const { data } = useContext(DataContext);
     const [regs, setRegs] = useState(
         [   {'name': 'x0', 'value': '0'},
             {'name': 'x1', 'value': '0'},
@@ -17,6 +20,7 @@ const Registers = () => {
             {'name': 'x11', 'value': '0'},
             {'name': 'x12', 'value': '0'},
             {'name': 'x13', 'value': '0'},
+            {'name': 'x14', 'value': '0'},
             {'name': 'x15', 'value': '0'},
             {'name': 'x16', 'value': '0'},
             {'name': 'x17', 'value': '0'},
@@ -36,6 +40,13 @@ const Registers = () => {
             {'name': 'x31', 'value': '0'},
         ]
     );
+    // update the values of regs from data
+    // useEffect(() => {
+    //     if(data){
+    //         setRegs(data.registers);
+    //     }
+    // }, [data]);
+
     return (
         <div className='registers'>
         <div className='table'>
