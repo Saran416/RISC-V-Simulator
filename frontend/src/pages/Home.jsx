@@ -6,7 +6,7 @@ import { useContext } from 'react'
 import { DataContext } from '../context/DataContext.jsx'
 
 
-const Home = () => {
+// const Home = () => {
   // const { updateData } = useContext(DataContext);
 
   // const getData = async () => {
@@ -16,11 +16,13 @@ const Home = () => {
   //   updateData(data);
   // }
 
+  const runFile = async () => {
+
   return (
     <>
     <Navbar></Navbar>
     <div className="toolbar">
-      <button className='run'>
+      <button className='run' onClick={runFile}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path d="M8 5v14l11-7L8 5z"/>
         </svg>
