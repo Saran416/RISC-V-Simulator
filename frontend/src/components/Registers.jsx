@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import './Registers.css'
-import { useContext } from 'react'
-import { DataContext } from '../context/DataContext.jsx'
+// import { useContext } from 'react'
+// import { DataContext } from '../context/DataContext.jsx'
 
 const Registers = () => {
     // const { data } = useContext(DataContext);

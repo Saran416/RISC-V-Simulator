@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import './Mem.css';
-import { useContext } from 'react';
-import { DataContext } from '../context/DataContext.jsx'
+// import { useContext } from 'react';
+// import { DataContext } from '../context/DataContext.jsx'
 
 const Mem = () => {
   const [mem, setMem] = React.useState(new Array(500).fill(0)); // Initialize memory with dummy values
