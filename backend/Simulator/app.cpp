@@ -20,12 +20,15 @@ int main( int argc, char *argv[] )
         cout << "Invalid number of arguments" << endl;
         return 0;
     }
-    if(argv[1] == "run"){
-        loadProgram("input.s");
+    string filename = "";
+    
+    loadProgram("input.s");
+    // we see the first argument and if it is "run" we run the program till the end
+    if(string(argv[1]) == "run"){
         run();
     }
-    else if(argv[1] == "step"){
-        loadProgram("input.s");
+
+    else if(string(argv[1]) == "step"){
         step();
     }
     
