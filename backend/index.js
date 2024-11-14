@@ -28,9 +28,10 @@ app.post('/getData', (req, res) => {
 
         simProcess.on('close', () => {
             const lines = dataOutput.split('\n');
+            // register will be a map like "x0" : value
             let registers = {};
             let memory = {};
-
+            
             let isRegisters = true;
             let registerCount = 0;
             let memCount = 0;
@@ -41,10 +42,10 @@ app.post('/getData', (req, res) => {
                     continue;
                 }
                 if (isRegisters) {
-                    registers[registerCount] = lines[i];
+                    registers[`x${registerCount}`] = lines[i];
                     registerCount++;
                 } else {
-                    memory[memCount] = lines[i];
+                    memory[`0x${memCount}`] = lines[i];
                     memCount++;
                 }
             }

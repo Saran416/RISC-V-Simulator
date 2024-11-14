@@ -2,6 +2,8 @@ import CodeMirror from '@uiw/react-codemirror';
 import React, { useState, useEffect } from 'react';
 import './Editor.css';
 import { dracula } from '@uiw/codemirror-theme-dracula';
+import { useContext } from 'react';
+import { DataContext } from '../context/DataContext.jsx';
 // import { useContext } from 'react'
 // import { DataContext } from '../context/DataContext.jsx'
 
@@ -12,16 +14,41 @@ const Editor = () => {
 
     // Set initial code in the state
     const [code, setCode] = useState(defaultText);
-
+    
+    const { updateRegs, updateMem } = useContext(DataContext);
     // Effect to set initial value (optional if you want to modify defaultText dynamically)
     // useEffect(() => {
     //     setCode(defaultText);
     // }, []);
 
+    const runCode = async () => {
+        try {
+            const response = await fetch('http://localhost:5069/getData', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code: code }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch data');
+            }
+
+            const { registers, memory } = await response.json(); // Extract registers and memory from response
+            console.log("Printing registers and memory:");
+            console.log(registers);  // Print registers
+            updateRegs(registers);   // Update context with registers
+            updateMem(memory);       // Update context with memory
+        } catch (error) {
+            console.error('Error running code:', error);  // Handle any errors
+        }
+    };
+
     return (
         <div className='code-area'>
             <div className="toolbar">
-                <button className='run'>
+                <button className='run' onClick={runCode}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path d="M8 5v14l11-7L8 5z"/>
                     </svg>
