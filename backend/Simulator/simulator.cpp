@@ -1409,8 +1409,8 @@ void run()
     
     printRegs();
     cout << endl;
-
-
+    printMem(0x10000,1);
+    
     while (!st.empty())
     {
         st.pop();
@@ -1483,18 +1483,13 @@ void step()
 /*
     Prints memory from the given address and count
 */
-void printMem(unsigned long address, int count)
-{
-
-    // 0x0 or 0x10000 ????????
-    for (int i = 0; i < 0x50000; i++) 
-    {
-        int temp = address + i;
-        unsigned long data = (unsigned long)memory[temp]; // each byte of memory is extracted
-        string ans = decToHex(data);
-        cout << "0x" << dec << ans << endl;
+void printMem(unsigned long address,int count){
+    for(int i=0;i<0x3ff;i++){
+        
+        cout<< "0x"<<(unsigned long)(memory[address+i])<<endl;
     }
 }
+
 
 /*
     Adds breakpoint at the given line

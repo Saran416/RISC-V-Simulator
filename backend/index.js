@@ -28,10 +28,10 @@ app.post('/getData', (req, res) => {
 
         simProcess.on('close', () => {
             const lines = dataOutput.split('\n');
-            // register will be a map like "x0" : value
+            // Register and memory will be returned as key-value pairs
             let registers = {};
             let memory = {};
-            
+
             let isRegisters = true;
             let registerCount = 0;
             let memCount = 0;
@@ -39,17 +39,21 @@ app.post('/getData', (req, res) => {
             for (let i = 0; i < lines.length; i++) {
                 if (lines[i] === '') {
                     isRegisters = false;
+                    console.log('Memory starts at line', i);
                     continue;
                 }
                 if (isRegisters) {
                     registers[`x${registerCount}`] = lines[i];
                     registerCount++;
                 } else {
-                    memory[`0x${memCount}`] = lines[i];
+                    // Memory formatting as `0x10000`, `0x10001`, etc.
+                    const address = `0x${(0x10000 + memCount).toString(16)}`;
+                    memory[address] = lines[i];  // Map address to value
                     memCount++;
                 }
             }
 
+            // Send registers and memory to the client
             res.json({ success: true, registers: registers, memory: memory });
         });
 

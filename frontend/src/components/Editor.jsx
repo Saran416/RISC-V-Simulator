@@ -24,7 +24,7 @@ const Editor = () => {
     // useEffect(() => {
     //     setCode(defaultText);
     // }, []);
-
+    
     const runCode = async () => {
         try {
             const response = await fetch('http://localhost:5069/getData', {
@@ -44,6 +44,7 @@ const Editor = () => {
             console.log(registers);  // Print registers
             updateRegs(registers);   // Update context with registers
             updateMem(memory);       // Update context with memory
+            console.log('memory updated\n');
         } catch (error) {
             setErr(true);  // Set error state
             setLog(error.message);

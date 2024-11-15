@@ -1,8 +1,15 @@
-import { createContext, useCallback, useEffect, useState } from "react";
+import React, { useState, useCallback } from 'react';
+import { createContext } from 'react';
 
-export const DataContext = createContext()
+export const DataContext = createContext({
+    regs: {},
+    mem: {},
+    updateRegs: () => {},
+    updateMem: () => {},
+});
 
 export const DataContextProvider = ({ children }) => {
+    // Initialize registers state
     const [regs, setRegs] = useState({
         "x0": 0,
         "x1": 0,
@@ -37,20 +44,26 @@ export const DataContextProvider = ({ children }) => {
         "x30": 0,
         "x31": 0,
     });
-    const [mem, setMem] = useState({});
-    
-    
 
+    // Initialize memory starting from 0x10000 and set values to 0
+    const initialMemory = Array.from({ length: 0x400 }).reduce((acc, _, idx) => {
+        const address = (0x10000 + idx).toString(16);  // Ensure hex formatting
+        acc[`0x${address}`] = 0;  // Use the address in the correct hex format as the key
+        return acc;
+    }, {});
+
+    const [mem, setMem] = useState(initialMemory);
+
+    // Update registers state
     const updateRegs = useCallback((data) => {
-        // is data is not an empty object add
-        if(Object.keys(data).length !== 0){
-            setRegs(data); 
+        if (Object.keys(data).length !== 0) {
+            setRegs(data);
         }
-         // Update registers data
     }, []);
 
-    const updateMem = useCallback((data) => {
-        setMem(data);  // Update memory data
+    // Update memory state
+    const updateMem = useCallback((data) => {        
+        setMem(data);
     }, []);
 
     return (
