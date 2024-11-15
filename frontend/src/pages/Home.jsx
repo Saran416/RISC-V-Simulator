@@ -21,8 +21,8 @@ const Home = () => {
     <>
     <Navbar></Navbar>
     <div className="main-area">
-        <Editor />
-        <Registers />
+        <Editor className='editor-home'/>
+        <Registers  className='registers'/>
     </div>
     </>
   )

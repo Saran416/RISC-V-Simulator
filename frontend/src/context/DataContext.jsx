@@ -42,7 +42,11 @@ export const DataContextProvider = ({ children }) => {
     
 
     const updateRegs = useCallback((data) => {
-        setRegs(data);  // Update registers data
+        // is data is not an empty object add
+        if(Object.keys(data).length !== 0){
+            setRegs(data); 
+        }
+         // Update registers data
     }, []);
 
     const updateMem = useCallback((data) => {

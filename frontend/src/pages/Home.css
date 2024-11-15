@@ -7,6 +7,17 @@
     flex-direction: row;
     align-items: flex-start;
     justify-content: space-between;
+    @media (max-width: 1350px){
+        display: block;
+        .registers{
+            width: 100%;
+        }
+        .editor-home{
+            width: 100%;
+        }
+    }
 }
+
+
 
 

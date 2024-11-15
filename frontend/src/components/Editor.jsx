@@ -4,16 +4,20 @@ import './Editor.css';
 import { dracula } from '@uiw/codemirror-theme-dracula';
 import { useContext } from 'react';
 import { DataContext } from '../context/DataContext.jsx';
-// import { useContext } from 'react'
-// import { DataContext } from '../context/DataContext.jsx'
+import runIcon from '../assets/run.svg';
+import stepIcon from '../assets/step.svg';
+import stopIcon from '../assets/stop.svg';
 
 const Editor = () => {
     // Default code text without leading indentation or newlines
     const defaultText = `.data
 .text`;
+    const [log, setLog] = useState('');  // Initialize log state
 
     // Set initial code in the state
     const [code, setCode] = useState(defaultText);
+
+    const [err, setErr] = useState(false);  // Initialize error state
     
     const { updateRegs, updateMem } = useContext(DataContext);
     // Effect to set initial value (optional if you want to modify defaultText dynamically)
@@ -41,28 +45,31 @@ const Editor = () => {
             updateRegs(registers);   // Update context with registers
             updateMem(memory);       // Update context with memory
         } catch (error) {
+            setErr(true);  // Set error state
+            setLog(error.message);
             console.error('Error running code:', error);  // Handle any errors
         }
+        setErr(false);  // Reset error state
+        setLog("Code executed successfully!");  // Set log message
     };
 
     return (
         <div className='code-area'>
             <div className="toolbar">
+            <div className="toolbar-buttons">
                 <button className='run' onClick={runCode}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 5v14l11-7L8 5z"/>
-                    </svg>
+                    <img src={runIcon} alt="Run" className='icon'/>
                 </button>
                 <button className='step'>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8.29 16.29a1 1 0 001.42 0l4-4a1 1 0 000-1.42l-4-4a1 1 0 10-1.42 1.42L11.59 12l-3.3 3.29a1 1 0 000 1.42z"/>
-                    </svg>
+                    <img src={stepIcon} alt="Step" className='icon'/>
                 </button>
                 <button className='stop'>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 5h4v14H6V5zm8 0h4v14h-4V5z"/>
-                    </svg>
+                    <img src={stopIcon} alt="Stop" className='icon'/>
                 </button>
+            </div>
+            <div className="toolbar-log">
+                {err? <div className="error">Error: Invalid code</div> : <div className="log">{log}</div>}
+            </div>
             </div>
             <div className="editor">
                 <CodeMirror

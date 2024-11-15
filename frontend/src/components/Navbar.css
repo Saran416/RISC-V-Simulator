@@ -17,6 +17,16 @@
     padding-bottom: 1em;
     padding-top: 1em;
     padding-right: 10em;
+    @media screen and (max-width: 600px) {
+        .nav-title{
+            color: white;
+            font-size: 3em;
+            font-weight: 900;
+            margin: 0;
+            padding: 0;
+            margin-left: 1em;
+        }
+    }
 }
 
 .nav-title{
@@ -26,6 +36,7 @@
     margin: 0;
     padding: 0;
     margin-left: 1em;
+    padding-top: 0.2em;
     position: absolute;
     left: 0;
     top: 0;

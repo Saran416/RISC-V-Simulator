@@ -19,28 +19,76 @@
     align-items: center;
 }
 
+
+
 .toolbar{
-    margin-bottom: 2em;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    @media (max-width: 768px) {
+        display: block;
+        .toolbar-buttons{
+            margin-left: 0em;
+            margin-right: 2em;
+        }
+        .toolbar-log{
+            width: auto;
+            margin-right: 2em;
+        }
+    }
+}
+
+.toolbar-log{
     background-color: #282a36;
-    width: 20%;
+    margin-bottom: 2em;
     height: 4em;
     display: flex;
     flex-direction: row;
     align-items: center;
-    margin-left: auto;
-    margin-right: auto;
+    margin-right: 5em;
+    margin-left: 2em;
+    width: 50%;
     margin-top: 1em;
-    border-radius: 0.6em;
-    /* border: white 1px solid; */
+    padding-left: 2em;
+    font-size: 1.2em;
+    font-family: monospace;
+    font-weight: bold;
+    .log{
+        color: greenyellow;
+    }
+    .error{
+        color: red;
+    }
+}
+
+.toolbar-buttons{
+    margin-bottom: 2em;
+    background-color: #282a36;
+    height: 4em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: 5em;
+    margin-top: 1em;
+    border-radius: 10em;
     justify-content: center;
     button{
-        box-shadow: 2px 2px #000;
-        border-radius: 0.5em;
+        background: none;
         height: 2.6em;
         margin-right: 2em;
         margin-left: 2em;
     }
-    .run{
+    .icon{
+        width: 2.5em;
+        height: 2.5em;
+    }
+    
+    .icon:hover{
+        filter: brightness(0.8);
+    }
+    /* .run{
         background-color: #50fa7b;
     }
     .run:hover{
@@ -57,5 +105,6 @@
     }
     .stop:hover{
         background-color: #bd3f3f;
-    }
+    } */
 }
+

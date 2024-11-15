@@ -1,1 +1,2 @@
-addi x4, x0, 1
+.data
+.text
