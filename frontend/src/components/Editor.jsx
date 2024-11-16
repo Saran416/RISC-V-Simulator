@@ -12,6 +12,7 @@ const Editor = () => {
     // Default code text without leading indentation or newlines
     const defaultText = `.data
 .text`;
+    
     const [log, setLog] = useState('');  // Initialize log state
 
     // Set initial code in the state
@@ -20,10 +21,21 @@ const Editor = () => {
     const [err, setErr] = useState(false);  // Initialize error state
     
     const { updateRegs, updateMem } = useContext(DataContext);
-    // Effect to set initial value (optional if you want to modify defaultText dynamically)
-    // useEffect(() => {
-    //     setCode(defaultText);
-    // }, []);
+    
+    // Save code to local storage whenever it changes
+    useEffect(() => {
+        if(code != defaultText){
+            localStorage.setItem('code', code);
+        }
+    }, [code]);
+
+    // Load code from local storage if available
+    useEffect(() => {
+        const savedCode = localStorage.getItem('code');
+        if (savedCode != defaultText) {
+            setCode(savedCode);
+        }
+    }, []);
     
     const runCode = async () => {
         try {
@@ -69,7 +81,7 @@ const Editor = () => {
                 </button>
             </div>
             <div className="toolbar-log">
-                {err? <div className="error">Error: Invalid code</div> : <div className="log">{log}</div>}
+                {err? <div className="error">{log}</div> : <div className="log">{log}</div>}
             </div>
             </div>
             <div className="editor">
