@@ -54,16 +54,21 @@ const Editor = () => {
             const { registers, memory } = await response.json(); // Extract registers and memory from response
             console.log("Printing registers and memory:");
             console.log(registers);  // Print registers
-            updateRegs(registers);   // Update context with registers
-            updateMem(memory);       // Update context with memory
-            console.log('memory updated\n');
+            if(registers['x0'][0] === 'L'){
+                setErr(true);
+                setLog(registers["x0"]);
+            }
+            else{
+                updateRegs(registers);   // Update context with registers
+                updateMem(memory); 
+                setErr(false);  // Reset error state
+                setLog("Code executed successfully!"); 
+            }
         } catch (error) {
             setErr(true);  // Set error state
             setLog(error.message);
             console.error('Error running code:', error);  // Handle any errors
         }
-        setErr(false);  // Reset error state
-        setLog("Code executed successfully!");  // Set log message
     };
 
     return (
