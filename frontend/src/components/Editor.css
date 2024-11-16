@@ -16,6 +16,10 @@
     border: none;
 }
 
+.highlighted-line {
+    background-color: green;
+}
+
 .code-area{
     display: flex;
     flex-direction: column;

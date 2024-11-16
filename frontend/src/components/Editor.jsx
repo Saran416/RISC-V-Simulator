@@ -54,10 +54,14 @@ const Editor = () => {
             console.log("Printing registers and memory:");
             console.log(registers);  // Print registers
 
-            if (registers['x0'][0] === 'L') {
+            if (Object.keys(registers).length === 0) {
+                console.log("Registers are empty");
+            }
+            else if (registers['x0'][0] === 'L') {
                 setErr(true);
                 setLog(registers["x0"]);
-            } else {
+            }
+            else {
                 updateRegs(registers);   // Update context with registers
                 updateMem(memory);
                 setErr(false);  // Reset error state
@@ -89,23 +93,19 @@ const Editor = () => {
             console.log("Printing registers and memory:");
             console.log(registers);  // Print registers
 
-            if (registers['x0'][0] === 'L') {
+            if (Object.keys(registers).length === 0) {
+                console.log("Registers are empty");
+            }
+            else if (registers['x0'][0] === 'L') {
                 setErr(true);
                 setLog(registers["x0"]);
-            } else {
+            }
+            else {
                 updateRegs(registers);   // Update context with registers
                 updateMem(memory);
                 setErr(false);  // Reset error state
                 setLog("Code executed successfully!");
             }
-
-            // Update the PC with functional state update
-            setPc(prevPc => {
-                const updatedPc = prevPc + 4;
-                console.log(`Updated PC: ${updatedPc}`);
-                return updatedPc;
-            });
-
         } catch (error) {
             setErr(true);  // Set error state
             setLog(error.message);
@@ -118,6 +118,12 @@ const Editor = () => {
         setPc(0); 
         defaultInitialise();
     };
+
+    function highlightLine(editor, lineNumber) {
+        console.log(`Highlighting line ${lineNumber}`);
+        const lineHandle = editor.getLineHandle(lineNumber - 1); // Adjust for 0-based indexing
+        const textMarker = editor.markText(lineHandle.from, lineHandle.to, { className: "highlighted-line" });
+    }
 
     return (
         <div className='code-area'>
@@ -147,11 +153,15 @@ const Editor = () => {
                         matchBrackets: true,  // Highlight matching brackets
                         autoCloseBrackets: true,  // Auto close brackets
                     }}
-                    onChange={(data) => {
-                        console.log(data); // Log the updated code string
+                    onChange={(data, editor) => {
+                        highlightLine(editor, 2);
                         setCode(data); // Update the state with the code string
                     }}
                     theme={dracula} // Set the theme
+                    onDidMount={(editor) => {
+                        // Access the CodeMirror instance here
+                        highlightLine(editor, 2); // Highlight line 5
+                    }}
                 />
             </div>
         </div>
