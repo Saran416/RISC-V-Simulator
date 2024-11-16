@@ -1,7 +1,7 @@
 /**
-* This file contains implementations of backend simulator functions that 
-* are used by app.cpp to provide output to the user
-*/
+ * This file contains implementations of backend simulator functions that
+ * are used by app.cpp to provide output to the user
+ */
 
 #include <iostream>
 #include <string>
@@ -17,10 +17,10 @@ using namespace std;
 
 long int registers[32]; // 32 registers
 unsigned long memsize = 0x50000;
-unsigned char memory[0x50000]; // byte addressable memory
-vector<pair<int, string> > lines;   // stores the pc and the line
+unsigned char memory[0x50000];   // byte addressable memory
+vector<pair<int, string>> lines; // stores the pc and the line
 int mainPC = 0;
-stack<pair<string, int> > st; // stores the function name and the previous pc value
+stack<pair<string, int>> st;          // stores the function name and the previous pc value
 unordered_map<int, bool> breakpoints; // stores breakpoint status for each line
 unordered_map<std::string, std::string> opcode;
 unordered_map<int, int> labelIndex;
@@ -28,9 +28,9 @@ unordered_map<int, string> inverseLabel;
 unordered_map<string, string> alias;
 unordered_map<int, int> comments; // stores the pc and number and index where the comment starts
 unordered_map<string, int> label; // stores all the labels and their corresponding pc values
-bool funcCall = false; // stores whether a function call is made or not and is changed after use
-bool funcReturn = false; // stores whether a function return is made or not and is changed after use
-int memLines = 0; // number of lines for .data section (includes one line for .text )
+bool funcCall = false;            // stores whether a function call is made or not and is changed after use
+bool funcReturn = false;          // stores whether a function return is made or not and is changed after use
+int memLines = 0;                 // number of lines for .data section (includes one line for .text )
 
 void setPc(int pc)
 {
@@ -315,7 +315,7 @@ bool getLabels(string file)
             {
                 curr_label = line.substr(0, i);
                 i++;
-                while(i < line.length() && line[i] == ' ')
+                while (i < line.length() && line[i] == ' ')
                 {
                     i++;
                 }
@@ -1022,7 +1022,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         }
         for (int i = 0; i < size; i++)
         {
-            extracted_num = extracted_num + ((unsigned long )memory[address + i] << (i * 8));
+            extracted_num = extracted_num + ((unsigned long)memory[address + i] << (i * 8));
         }
         if (sign_extension)
         {
@@ -1411,14 +1411,14 @@ void run(bool toPrint)
             mainPC += 4;
         }
     }
-    
 
-    if(toPrint){
+    if (toPrint)
+    {
         printRegs();
         cout << endl;
         printMem(0x10000, 1);
     }
-    
+
     while (!st.empty())
     {
         st.pop();
@@ -1484,7 +1484,8 @@ void step(bool toPrint)
         mainPC += 4;
     }
 
-    if(toPrint){
+    if (toPrint)
+    {
         printRegs();
         cout << endl;
         printMem(0x10000, 1);
@@ -1493,12 +1494,11 @@ void step(bool toPrint)
 
 void updateStatus(int pc)
 {
-    
-    
-    mainPC = pc;
-    
+
+    // mainPC = pc;
+
     int stepsRequired = pc / 4;
-    
+
     for (int i = 0; i < stepsRequired; ++i)
     {
         step(false);
@@ -1508,13 +1508,14 @@ void updateStatus(int pc)
 /*
     Prints memory from the given address and count
 */
-void printMem(unsigned long address,int count){
-    for(int i=0;i<0x3ff;i++){
-        
-        cout<< "0x"<<hex <<(unsigned long)(memory[address+i])<<endl;
+void printMem(unsigned long address, int count)
+{
+    for (int i = 0; i < 0x3ff; i++)
+    {
+
+        cout << "0x" << hex << (unsigned long)(memory[address + i]) << endl;
     }
 }
-
 
 /*
     Adds breakpoint at the given line
@@ -1538,14 +1539,14 @@ void removeBreakpoint(int line)
 */
 void showStack()
 {
-    stack<pair<string, int> > stTemp = st;
-    stack<pair<string, int> > stTemp1;
+    stack<pair<string, int>> stTemp = st;
+    stack<pair<string, int>> stTemp1;
     if (st.empty())
     {
         cout << "Empty Call Stack: Execution complete" << endl;
         return;
     }
-    while (!stTemp.empty())  // reverses the stack to print it as required
+    while (!stTemp.empty()) // reverses the stack to print it as required
     {
         stTemp1.push(stTemp.top());
         stTemp.pop();

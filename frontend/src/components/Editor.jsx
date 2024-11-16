@@ -1,8 +1,7 @@
 import CodeMirror from '@uiw/react-codemirror';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import './Editor.css';
 import { dracula } from '@uiw/codemirror-theme-dracula';
-import { useContext } from 'react';
 import { DataContext } from '../context/DataContext.jsx';
 import runIcon from '../assets/run.svg';
 import stepIcon from '../assets/step.svg';
@@ -19,15 +18,15 @@ const Editor = () => {
     const [pc, setPc] = useState(0);  // Initialize program counter state
     const { updateRegs, updateMem, defaultInitialise } = useContext(DataContext);
 
+    const prevPcRef = useRef(pc);  // To store the previous pc value for debugging purposes
+
     // Save code to local storage whenever it changes
     useEffect(() => {
         if (code !== defaultText) {
             localStorage.setItem('code', code);
         }
-        if (pc !== 0) {
-            localStorage.setItem('currpc', pc);
-        }
-    }, [code, pc]);
+    }, [code]);
+
 
     // Load code and program counter from local storage if available
     useEffect(() => {
@@ -35,15 +34,7 @@ const Editor = () => {
         if (savedCode) {
             setCode(savedCode);
         }
-
-        const savedPc = localStorage.getItem('currpc');
-        if (savedPc) {
-            setPc(parseInt(savedPc, 10));
-            console.log(`pc ${pc}`)
-        }
-
-        console.log(`Initial PC on load: ${pc}`);  // This will log the correct value after it's updated
-    }, []); // Empty dependency array to ensure this only runs once
+    }, []); 
 
     const runCode = async () => {
         try {
@@ -108,9 +99,13 @@ const Editor = () => {
                 setLog("Code executed successfully!");
             }
 
-            // Ensure the pc is correctly updated
-            console.log(`Current PC after step: ${pc}`);
-            setPc(prevPc => prevPc + 4); // Using functional update to prevent potential stale state issues
+            // Update the PC with functional state update
+            setPc(prevPc => {
+                const updatedPc = prevPc + 4;
+                console.log(`Updated PC: ${updatedPc}`);
+                return updatedPc;
+            });
+
         } catch (error) {
             setErr(true);  // Set error state
             setLog(error.message);

@@ -7,11 +7,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+let gpc = 0;
+
 app.post('/getData', (req, res) => {
     const { code , arg, pc} = req.body;
     console.log('Received code:', code);
     console.log('Received arg:', arg);
-    console.log('Received pc:', pc);
+    console.log('Received pc:', gpc);
     fs.writeFile('./Simulator/input.s', code, (err) => {
         if (err) {
             console.error('Error writing to file', err);
@@ -21,14 +23,31 @@ app.post('/getData', (req, res) => {
 
         console.log('File written successfully');
 
-        const simProcess = spawn('./riscv_sim', [arg,pc], { cwd: './Simulator' });
-        console.log(`./riscv_sim ${arg} ${pc}`);
+        const simProcess = spawn('./riscv_sim', [arg,gpc], { cwd: './Simulator' });
+
+        console.log(`./riscv_sim ${arg} ${gpc}`);
         let dataOutput = "";
+
+        if(arg === 'step'){
+            console.log("checking for step");
+            gpc += 4;
+        }
+
+        if(arg==='run'){
+            console.log("checking for run");
+            gpc = 0;
+        }
 
         simProcess.stdout.on('data', (data) => {
             dataOutput += data;
         });
-        
+
+        if(dataOutput!==''){
+            console.log("dataOutput is null");
+            gpc = 0;
+        }
+
+
         simProcess.on('close', () => {
             const lines = dataOutput.split('\n');
             // Register and memory will be returned as key-value pairs
