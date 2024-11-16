@@ -8,8 +8,10 @@ app.use(cors());
 app.use(express.json());
 
 app.post('/getData', (req, res) => {
-    const { code } = req.body;
-
+    const { code , arg, pc} = req.body;
+    console.log('Received code:', code);
+    console.log('Received arg:', arg);
+    console.log('Received pc:', pc);
     fs.writeFile('./Simulator/input.s', code, (err) => {
         if (err) {
             console.error('Error writing to file', err);
@@ -19,13 +21,14 @@ app.post('/getData', (req, res) => {
 
         console.log('File written successfully');
 
-        const simProcess = spawn('./riscv_sim', ['run'], { cwd: './Simulator' });
+        const simProcess = spawn('./riscv_sim', [arg,pc], { cwd: './Simulator' });
+        console.log(`./riscv_sim ${arg} ${pc}`);
         let dataOutput = "";
 
         simProcess.stdout.on('data', (data) => {
             dataOutput += data;
         });
-
+        
         simProcess.on('close', () => {
             const lines = dataOutput.split('\n');
             // Register and memory will be returned as key-value pairs

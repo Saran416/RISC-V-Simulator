@@ -20,12 +20,16 @@ bool loadProgram(string file);
 /*
     Runs the entire code starting from the current PC
 */
-void run();
+void run(bool flag);
 
 /*
     Step by step execution after the execution is stopped by breakpoint or from the start itself
 */
-void step();
+void step(bool flag);
+
+void updateStatus(int pc);
+
+void setPc(int pc);
 
 /*
     Prints memory from the given address and count

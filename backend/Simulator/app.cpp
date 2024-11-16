@@ -15,21 +15,18 @@ using namespace std;
 
 int main( int argc, char *argv[] )
 {
-    if (argc != 2)
-    {
-        cout << "Invalid number of arguments" << endl;
-        return 0;
-    }
     string filename = "";
-    
-    loadProgram("input.s");
     // we see the first argument and if it is "run" we run the program till the end
     if(string(argv[1]) == "run"){
-        run();
+        loadProgram("input.s");
+        updateStatus(stoi(argv[2]));
+        run(true);
     }
-
+    
     else if(string(argv[1]) == "step"){
-        step();
+        loadProgram("input.s");
+        updateStatus(stoi(argv[2]));
+        step(true);
     }
     
 }

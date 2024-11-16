@@ -32,6 +32,11 @@ bool funcCall = false; // stores whether a function call is made or not and is c
 bool funcReturn = false; // stores whether a function return is made or not and is changed after use
 int memLines = 0; // number of lines for .data section (includes one line for .text )
 
+void setPc(int pc)
+{
+    mainPC = pc;
+}
+
 /*
 takes immediate in any form as input, find out whether hex, decimal or binary converts it into a long value accordingly and also return a bool that indicates if there is an error while converting it.
 */
@@ -1352,7 +1357,7 @@ bool loadProgram(string file)
 /*
     Runs the entire code starting from the current PC
 */
-void run()
+void run(bool toPrint)
 {
     int numLines = lines.size();
     if (mainPC / 4 >= numLines)
@@ -1407,9 +1412,12 @@ void run()
         }
     }
     
-    printRegs();
-    cout << endl;
-    printMem(0x10000,1);
+
+    if(toPrint){
+        printRegs();
+        cout << endl;
+        printMem(0x10000, 1);
+    }
     
     while (!st.empty())
     {
@@ -1420,11 +1428,10 @@ void run()
 /*
     Step by step execution after the execution is stopped by breakpoint or from the start itself
 */
-void step()
+void step(bool toPrint)
 {
     if (mainPC / 4 >= lines.size())
     {
-        cout << "Nothing to step" << endl;
         while (!st.empty())
         {
             st.pop();
@@ -1476,9 +1483,27 @@ void step()
         string hexPC = decToHex(mainPC);
         mainPC += 4;
     }
+
+    if(toPrint){
+        printRegs();
+        cout << endl;
+        printMem(0x10000, 1);
+    }
 }
 
-
+void updateStatus(int pc)
+{
+    
+    
+    mainPC = pc;
+    
+    int stepsRequired = pc / 4;
+    
+    for (int i = 0; i < stepsRequired; ++i)
+    {
+        step(false);
+    }
+}
 
 /*
     Prints memory from the given address and count
@@ -1486,7 +1511,7 @@ void step()
 void printMem(unsigned long address,int count){
     for(int i=0;i<0x3ff;i++){
         
-        cout<< "0x"<<(unsigned long)(memory[address+i])<<endl;
+        cout<< "0x"<<hex <<(unsigned long)(memory[address+i])<<endl;
     }
 }
 
