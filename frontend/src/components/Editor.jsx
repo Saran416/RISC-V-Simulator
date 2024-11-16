@@ -6,7 +6,7 @@ import { useContext } from 'react';
 import { DataContext } from '../context/DataContext.jsx';
 import runIcon from '../assets/run.svg';
 import stepIcon from '../assets/step.svg';
-import stopIcon from '../assets/stop.svg';
+import restartIcon from '../assets/restart.svg';
 
 const Editor = () => {
     // Default code text without leading indentation or newlines
@@ -77,7 +77,7 @@ const Editor = () => {
                     <img src={stepIcon} alt="Step" className='icon'/>
                 </button>
                 <button className='stop'>
-                    <img src={stopIcon} alt="Stop" className='icon'/>
+                    <img src={restartIcon} alt="Restart" className='icon'/>
                 </button>
             </div>
             <div className="toolbar-log">

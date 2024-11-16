@@ -92,23 +92,5 @@
     .icon:hover{
         filter: brightness(0.5);
     }
-    /* .run{
-        background-color: #50fa7b;
-    }
-    .run:hover{
-        background-color: #34bd57;
-    }
-    .step{
-        background-color: #f1fa8c;
-    }
-    .step:hover{
-        background-color: #b4bb67;
-    }
-    .stop{
-        background-color: #ff5555;
-    }
-    .stop:hover{
-        background-color: #bd3f3f;
-    } */
 }
 
