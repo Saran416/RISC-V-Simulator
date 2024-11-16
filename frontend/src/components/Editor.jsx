@@ -24,7 +24,7 @@ const Editor = () => {
     
     // Save code to local storage whenever it changes
     useEffect(() => {
-        if(code != defaultText){
+        if(code !== defaultText){
             localStorage.setItem('code', code);
         }
     }, [code]);
@@ -32,7 +32,7 @@ const Editor = () => {
     // Load code from local storage if available
     useEffect(() => {
         const savedCode = localStorage.getItem('code');
-        if (savedCode != defaultText) {
+        if (savedCode) {
             setCode(savedCode);
         }
     }, []);
