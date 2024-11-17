@@ -20,14 +20,14 @@ const Editor = () => {
     // Save code to local storage whenever it changes
     useEffect(() => {
         if (code !== defaultText) {
-            localStorage.setItem('code', code);
+            localStorage.setItem('curr_code', code);
         }
     }, [code]);
 
 
     // Load code and program counter from local storage if available
     useEffect(() => {
-        const savedCode = localStorage.getItem('code');
+        const savedCode = localStorage.getItem('curr_code');
         if (savedCode) {
             setCode(savedCode);
         }
@@ -68,7 +68,7 @@ const Editor = () => {
             }
         } catch (error) {
             updateErr(true);  // Set error state
-            setLog(error.message);
+            updateLog(error.message);
             console.error('Error running code:', error);  // Handle any errors
         }
     };
@@ -110,13 +110,13 @@ const Editor = () => {
             }
         } catch (error) {
             updateErr(true);  // Set error state
-            setLog(error.message);
+            updateLog(error.message);
             console.error('Error running code:', error);  // Handle any errors
         }
     };
 
     const restart =     async () => {
-        updateLog('');
+        updateLog('Reset Successful');
         const response = await fetch('http://localhost:5069/setzero', {
             method: 'GET',
         });
@@ -152,8 +152,7 @@ const Editor = () => {
                         matchBrackets: true,  // Highlight matching brackets
                         autoCloseBrackets: true,  // Auto close brackets
                     }}
-                    onChange={(data, editor) => {
-                        highlightLine(editor, 2);
+                    onChange={(data) => {
                         setCode(data); // Update the state with the code string
                     }}
                     theme={dracula} // Set the theme

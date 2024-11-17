@@ -64,8 +64,9 @@ app.post('/getData', (req, res) => {
             if(statuslog[0] === 'L'){
                 console.log("Setting gpc to 0");
                 gpc = 0;
-                res.json({ success: true, registers: {}, memory: {}, statuslog:statuslog });
+                res.json({ success: true, registers: {"x1":0}, memory: {"0x10000":0}, statuslog:statuslog });
             }
+            else{
             for (let i = 1; i < lines.length; i++) {
                 if (lines[i] === '') {
                     isRegisters = false;
@@ -85,6 +86,7 @@ app.post('/getData', (req, res) => {
             
             // Send registers and memory to the client
             res.json({ success: true, registers: registers, memory: memory, statuslog:statuslog });
+        }
         });
 
         simProcess.on('error', (error) => {
