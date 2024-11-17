@@ -11,12 +11,10 @@ const Editor = () => {
     // Default code text without leading indentation or newlines
     const defaultText = `.data
 .text`;
-
-    const [log, setLog] = useState('');  // Initialize log state
     const [code, setCode] = useState(defaultText);  // Set initial code in the state
     const [err, setErr] = useState(false);  // Initialize error state
     const [pc, setPc] = useState(0);  // Initialize program counter state
-    const { updateRegs, updateMem, defaultInitialise } = useContext(DataContext);
+    const { updateRegs, updateMem, defaultInitialise , log, updateLog} = useContext(DataContext);
 
     const prevPcRef = useRef(pc);  // To store the previous pc value for debugging purposes
 
@@ -45,12 +43,12 @@ const Editor = () => {
                 },
                 body: JSON.stringify({ code: code, arg: 'run', pc: pc }),
             });
-
+            
             if (!response.ok) {
                 throw new Error('Failed to fetch data');
             }
 
-            const { registers, memory } = await response.json(); // Extract registers and memory from response
+            const { registers, memory, statuslog } = await response.json(); // Extract registers and memory from response
             console.log("Printing registers and memory:");
             console.log(registers);  // Print registers
 
@@ -59,13 +57,13 @@ const Editor = () => {
             }
             else if (registers['x0'][0] === 'L') {
                 setErr(true);
-                setLog(registers["x0"]);
+                updateLog(statuslog)
             }
             else {
                 updateRegs(registers);   // Update context with registers
                 updateMem(memory);
                 setErr(false);  // Reset error state
-                setLog("Code executed successfully!");
+                updateLog(statuslog);
             }
         } catch (error) {
             setErr(true);  // Set error state
@@ -89,22 +87,23 @@ const Editor = () => {
                 throw new Error('Failed to fetch data');
             }
 
-            const { registers, memory } = await response.json(); // Extract registers and memory from response
+            const { registers, memory, statuslog } = await response.json(); // Extract registers and memory from response
             console.log("Printing registers and memory:");
             console.log(registers);  // Print registers
 
             if (Object.keys(registers).length === 0) {
                 console.log("Registers are empty");
             }
-            else if (registers['x0'][0] === 'L') {
+            else if (statuslog[0] === 'L') {
                 setErr(true);
-                setLog(registers["x0"]);
+                updateLog(statuslog);
+                defaultInitialise();
             }
             else {
                 updateRegs(registers);   // Update context with registers
                 updateMem(memory);
                 setErr(false);  // Reset error state
-                setLog("Code executed successfully!");
+                updateLog(statuslog);
             }
         } catch (error) {
             setErr(true);  // Set error state
@@ -113,9 +112,11 @@ const Editor = () => {
         }
     };
 
-    const restart = () => {
-        setLog('');
-        setPc(0); 
+    const restart =async () => {
+        updateLog('');
+        const response = await fetch('http://localhost:5069/setzero', {
+            method: 'GET',
+        });
         defaultInitialise();
     };
 

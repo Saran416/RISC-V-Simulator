@@ -53,12 +53,20 @@ app.post('/getData', (req, res) => {
             // Register and memory will be returned as key-value pairs
             let registers = {};
             let memory = {};
-
+            let statuslog = "";
             let isRegisters = true;
             let registerCount = 0;
             let memCount = 0;
+            
+            statuslog = lines[0];
+            console.log(`Printing log:${statuslog}`);
 
-            for (let i = 0; i < lines.length; i++) {
+            if(statuslog[0] === 'L'){
+                console.log("Setting gpc to 0");
+                gpc = 0;
+                res.json({ success: true, registers: {}, memory: {}, statuslog:statuslog });
+            }
+            for (let i = 1; i < lines.length; i++) {
                 if (lines[i] === '') {
                     isRegisters = false;
                     console.log('Memory starts at line', i);
@@ -74,9 +82,9 @@ app.post('/getData', (req, res) => {
                     memCount++;
                 }
             }
-
+            
             // Send registers and memory to the client
-            res.json({ success: true, registers: registers, memory: memory });
+            res.json({ success: true, registers: registers, memory: memory, statuslog:statuslog });
         });
 
         simProcess.on('error', (error) => {
@@ -85,6 +93,11 @@ app.post('/getData', (req, res) => {
         });
     });
 });
+
+app.get('/setzero', (req, res) => {
+    gpc = 0;
+    res.json({ success: true, message: 'PC set to zero' });
+})
 
 app.listen(5069, () => {
     console.log('Server running on port 5069');

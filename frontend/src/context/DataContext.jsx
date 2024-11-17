@@ -7,6 +7,8 @@ export const DataContext = createContext({
     updateRegs: () => {},
     updateMem: () => {},
     defaultInitialise: () => {},
+    log: '',
+    updateLog: () => {},
 });
 
 export const DataContextProvider = ({ children }) => {
@@ -52,8 +54,10 @@ export const DataContextProvider = ({ children }) => {
         acc[`0x${address}`] = 0;  // Use the address in the correct hex format as the key
         return acc;
     }, {});
-
+    
     const [mem, setMem] = useState(initialMemory);
+
+    const [log,setLog] = useState('');  // Initialize log state
 
     // Update registers state
     const updateRegs = useCallback((data) => {
@@ -65,6 +69,10 @@ export const DataContextProvider = ({ children }) => {
     // Update memory state
     const updateMem = useCallback((data) => {        
         setMem(data);
+    }, []);
+
+    const updateLog = useCallback((data) => {
+        setLog(data);
     }, []);
 
     const defaultInitialise = () =>{
@@ -106,7 +114,7 @@ export const DataContextProvider = ({ children }) => {
     }
 
     return (
-        <DataContext.Provider value={{ regs, mem, updateMem, updateRegs, defaultInitialise }}>
+        <DataContext.Provider value={{ regs, mem, log, updateLog,updateMem, updateRegs, defaultInitialise }}>
             {children}
         </DataContext.Provider>
     );

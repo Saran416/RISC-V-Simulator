@@ -18,9 +18,9 @@ using namespace std;
 long int registers[32]; // 32 registers
 unsigned long memsize = 0x50000;
 unsigned char memory[0x50000];   // byte addressable memory
-vector<pair<int, string>> lines; // stores the pc and the line
+vector<pair<int, string> > lines; // stores the pc and the line
 int mainPC = 0;
-stack<pair<string, int>> st;          // stores the function name and the previous pc value
+stack<pair<string, int> > st;          // stores the function name and the previous pc value
 unordered_map<int, bool> breakpoints; // stores breakpoint status for each line
 unordered_map<std::string, std::string> opcode;
 unordered_map<int, int> labelIndex;
@@ -1414,6 +1414,7 @@ void run(bool toPrint)
 
     if (toPrint)
     {
+        cout << "Code executed successfully" << endl;
         printRegs();
         cout << endl;
         printMem(0x10000, 1);
@@ -1457,7 +1458,8 @@ void step(bool toPrint)
     else if (res != 0 || flag) // if branch or jump
     {
         string hexPC = decToHex(mainPC);
-
+        if(toPrint)
+            cout << "Executed " << line.substr(labelIndex[mainPC]) << endl;// "; PC = " << "0x" + addZeroes(hexPC, 8) << endl;
         pair<string, int> temp(st.top().first, mainPC / 4 + 1 + memLines);
         mainPC = res;
         if (funcReturn)
@@ -1481,6 +1483,8 @@ void step(bool toPrint)
         st.pop();
         st.push(temp);
         string hexPC = decToHex(mainPC);
+        if(toPrint)
+            cout << "Executed " << line.substr(labelIndex[mainPC]) << endl;//<< "; PC = " << "0x" + addZeroes(hexPC, 8) << endl;
         mainPC += 4;
     }
 
@@ -1494,9 +1498,7 @@ void step(bool toPrint)
 
 void updateStatus(int pc)
 {
-
-    // mainPC = pc;
-
+    
     int stepsRequired = pc / 4;
 
     for (int i = 0; i < stepsRequired; ++i)
@@ -1539,8 +1541,8 @@ void removeBreakpoint(int line)
 */
 void showStack()
 {
-    stack<pair<string, int>> stTemp = st;
-    stack<pair<string, int>> stTemp1;
+    stack<pair<string, int> > stTemp = st;
+    stack<pair<string, int> > stTemp1;
     if (st.empty())
     {
         cout << "Empty Call Stack: Execution complete" << endl;
