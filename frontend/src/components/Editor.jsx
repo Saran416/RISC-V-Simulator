@@ -12,9 +12,8 @@ const Editor = () => {
     const defaultText = `.data
 .text`;
     const [code, setCode] = useState(defaultText);  // Set initial code in the state
-    const [err, setErr] = useState(false);  // Initialize error state
     const [pc, setPc] = useState(0);  // Initialize program counter state
-    const { updateRegs, updateMem, defaultInitialise , log, updateLog} = useContext(DataContext);
+    const { updateRegs, updateMem, defaultInitialise , log, updateLog, err, updateErr} = useContext(DataContext);
 
     const prevPcRef = useRef(pc);  // To store the previous pc value for debugging purposes
 
@@ -54,19 +53,21 @@ const Editor = () => {
 
             if (Object.keys(registers).length === 0) {
                 console.log("Registers are empty");
+                updateLog("Nothing to run");
+                updateErr(true);
             }
             else if (registers['x0'][0] === 'L') {
-                setErr(true);
+                updateErr(true);
                 updateLog(statuslog)
             }
             else {
                 updateRegs(registers);   // Update context with registers
                 updateMem(memory);
-                setErr(false);  // Reset error state
+                updateErr(false);  // Reset error state
                 updateLog(statuslog);
             }
         } catch (error) {
-            setErr(true);  // Set error state
+            updateErr(true);  // Set error state
             setLog(error.message);
             console.error('Error running code:', error);  // Handle any errors
         }
@@ -74,7 +75,7 @@ const Editor = () => {
 
     const stepCode = async () => {
         try {
-            console.log(`Current PC before step: ${pc}`);
+            // console.log(`Current PC before step: ${pc}`);
             const response = await fetch('http://localhost:5069/getData', {
                 method: 'POST',
                 headers: {
@@ -92,27 +93,29 @@ const Editor = () => {
             console.log(registers);  // Print registers
 
             if (Object.keys(registers).length === 0) {
+                updateLog("Nothing to step");
+                updateErr(true);
                 console.log("Registers are empty");
             }
             else if (statuslog[0] === 'L') {
-                setErr(true);
+                updateErr(true);
                 updateLog(statuslog);
                 defaultInitialise();
             }
             else {
                 updateRegs(registers);   // Update context with registers
                 updateMem(memory);
-                setErr(false);  // Reset error state
+                updateErr(false);  // Reset error state
                 updateLog(statuslog);
             }
         } catch (error) {
-            setErr(true);  // Set error state
+            updateErr(true);  // Set error state
             setLog(error.message);
             console.error('Error running code:', error);  // Handle any errors
         }
     };
 
-    const restart =async () => {
+    const restart =     async () => {
         updateLog('');
         const response = await fetch('http://localhost:5069/setzero', {
             method: 'GET',
@@ -120,11 +123,6 @@ const Editor = () => {
         defaultInitialise();
     };
 
-    function highlightLine(editor, lineNumber) {
-        console.log(`Highlighting line ${lineNumber}`);
-        const lineHandle = editor.getLineHandle(lineNumber - 1); // Adjust for 0-based indexing
-        const textMarker = editor.markText(lineHandle.from, lineHandle.to, { className: "highlighted-line" });
-    }
 
     return (
         <div className='code-area'>
@@ -159,10 +157,6 @@ const Editor = () => {
                         setCode(data); // Update the state with the code string
                     }}
                     theme={dracula} // Set the theme
-                    onDidMount={(editor) => {
-                        // Access the CodeMirror instance here
-                        highlightLine(editor, 2); // Highlight line 5
-                    }}
                 />
             </div>
         </div>

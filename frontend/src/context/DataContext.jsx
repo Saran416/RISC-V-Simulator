@@ -9,6 +9,8 @@ export const DataContext = createContext({
     defaultInitialise: () => {},
     log: '',
     updateLog: () => {},
+    err: false,
+    updateErr: () => {},
 });
 
 export const DataContextProvider = ({ children }) => {
@@ -59,6 +61,8 @@ export const DataContextProvider = ({ children }) => {
 
     const [log,setLog] = useState('');  // Initialize log state
 
+    const [err, setErr] = useState(false);  // Initialize error state
+
     // Update registers state
     const updateRegs = useCallback((data) => {
         if (Object.keys(data).length !== 0) {
@@ -74,6 +78,11 @@ export const DataContextProvider = ({ children }) => {
     const updateLog = useCallback((data) => {
         setLog(data);
     }, []);
+
+    const updateErr = useCallback((data) => {
+        setErr(data);
+    }, []);
+
 
     const defaultInitialise = () =>{
         setRegs({
@@ -114,7 +123,7 @@ export const DataContextProvider = ({ children }) => {
     }
 
     return (
-        <DataContext.Provider value={{ regs, mem, log, updateLog,updateMem, updateRegs, defaultInitialise }}>
+        <DataContext.Provider value={{ err, regs, mem, log, updateLog,updateMem, updateRegs, defaultInitialise, updateErr }}>
             {children}
         </DataContext.Provider>
     );
