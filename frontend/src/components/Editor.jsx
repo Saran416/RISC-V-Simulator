@@ -48,19 +48,21 @@ const Editor = () => {
             }
 
             const { registers, memory, statuslog } = await response.json(); // Extract registers and memory from response
-            console.log("Printing registers and memory:");
-            console.log(registers);  // Print registers
+            // console.log("Printing registers and memory:");
+            // console.log(registers);  // Print registers
+            console.log(statuslog);  // Print memory
 
-            if (Object.keys(registers).length === 0) {
-                console.log("Registers are empty");
-                updateLog("Nothing to run");
-                updateErr(true);
+            if(statuslog[0] === 'E'){
+                updateLog(statuslog);
+                updateErr(false);
             }
-            else if (registers['x0'][0] === 'L') {
-                updateErr(true);
+            else
+            {
                 updateLog(statuslog)
+                updateErr(true);
             }
-            else {
+
+            if (Object.keys(registers).length !== 0) {
                 updateRegs(registers);   // Update context with registers
                 updateMem(memory);
                 updateErr(false);  // Reset error state
@@ -89,20 +91,27 @@ const Editor = () => {
             }
 
             const { registers, memory, statuslog } = await response.json(); // Extract registers and memory from response
-            console.log("Printing registers and memory:");
-            console.log(registers);  // Print registers
+            // console.log("Printing registers and memory:");
+            // console.log(registers);  // Print registers
+            console.log(statuslog);  // Print memory
 
-            if (Object.keys(registers).length === 0) {
+            if(statuslog[0] === 'E'){
+                updateLog(statuslog);
+                updateErr(false);
+            }
+            // if statuslog is empty string
+            else if(statuslog === ""){
                 updateLog("Nothing to step");
                 updateErr(true);
-                console.log("Registers are empty");
             }
-            else if (statuslog[0] === 'L') {
+            else
+            {
+                updateLog(statuslog)
                 updateErr(true);
-                updateLog(statuslog);
-                defaultInitialise();
             }
-            else {
+
+
+            if (Object.keys(registers).length !== 0)  {
                 updateRegs(registers);   // Update context with registers
                 updateMem(memory);
                 updateErr(false);  // Reset error state
@@ -117,6 +126,7 @@ const Editor = () => {
 
     const restart =     async () => {
         updateLog('Reset Successful');
+        updateErr(false);
         const response = await fetch('http://localhost:5069/setzero', {
             method: 'GET',
         });
