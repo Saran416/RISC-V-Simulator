@@ -95,7 +95,7 @@ const Editor = () => {
             // console.log(registers);  // Print registers
             console.log(statuslog);  // Print memory
 
-            if(statuslog[0] === 'E'){
+            if(statuslog[0] === 'E' || statuslog[0] === "C"){
                 updateLog(statuslog);
                 updateErr(false);
             }
@@ -111,7 +111,7 @@ const Editor = () => {
             }
 
 
-            if (Object.keys(registers).length !== 0 && statuslog[0] === 'E')  {
+            if (Object.keys(registers).length !== 0 && (statuslog[0] === 'E' || statuslog[0] === "C"))  {
                 updateRegs(registers);   // Update context with registers
                 updateMem(memory);
                 // updateErr(false);  // Reset error state

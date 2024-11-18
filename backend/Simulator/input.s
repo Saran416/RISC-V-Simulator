@@ -1,13 +1,17 @@
 .data
-.dword 3, 0, 12, 125, 50, 32, 16
+.dword 3, 0, 12, 125, 50, 32, 16 
 .text
-lui x3, 0x10
+lui x3, 0x10   ;amogh is gay
 addi x2, x3, 0x200 
 ld x4, 0(x3) 
 addi x3, x3, 8 
 loop: beq x4, x0, quit 
 ld x5, 0(x3) 
+
 ld x6, 8(x3) 
+
+
+
     beq x6, x0, update 
     beq x5, x0, movex5tox6 
     blt x5, x6, case2

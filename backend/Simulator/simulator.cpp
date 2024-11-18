@@ -185,8 +185,11 @@ pair<bool, int> loadFile(string inputFile)
     bool isTextSection = true;
     while (getline(file, line))
     {
-        if (line.length() == 0)
+        if (line[0] == '\0')
+
         {
+            pc += 4;
+            lines.push_back(make_pair(pc, line));
             continue;
         }
         else if (line[0] == ';')
@@ -1368,6 +1371,11 @@ void run(bool toPrint)
     while ((mainPC / 4) < numLines && mainPC >= 0)
     {
         string line = lines[mainPC / 4].second;
+        if (line[0] == '\0')
+        {
+            mainPC += 4;
+            continue;
+        }
         pair<int, bool> ans = convert(lines[mainPC / 4].second, mainPC, false);
         int res = ans.first;
         bool flag = ans.second;
@@ -1440,6 +1448,19 @@ void step(bool toPrint)
         return;
     }
     string line = lines[mainPC / 4].second;
+    if (line[0] == '\0')
+    {
+        mainPC += 4;
+
+        if (toPrint)
+        {
+            cout << "Encountered Empty Line" << endl;
+            printRegs();
+            cout << endl;
+            printMem(0x10000, 1);
+        }
+        return;
+    }
     pair<int, bool> ans = convert(lines[mainPC / 4].second, mainPC, true);
     int res = ans.first;
     bool flag = ans.second;
