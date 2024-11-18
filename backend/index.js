@@ -61,7 +61,7 @@ app.post('/getData', (req, res) => {
             statuslog = lines[0];
             console.log(`Printing log:${statuslog}`);
 
-            if(statuslog[0] === 'L'){
+            if(statuslog[0] !== 'E' && statuslog[0] !== 'C'){
                 console.log("Setting gpc to 0");
                 gpc = 0;
                 res.json({ success: true, registers: {"x1":0}, memory: {"0x10000":0}, statuslog:statuslog });

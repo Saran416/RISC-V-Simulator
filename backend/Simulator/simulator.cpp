@@ -18,9 +18,9 @@ using namespace std;
 long int registers[32]; // 32 registers
 unsigned long memsize = 0x50000;
 unsigned char memory[0x50000];   // byte addressable memory
-vector<pair<int, string> > lines; // stores the pc and the line
+vector<pair<int, string>> lines; // stores the pc and the line
 int mainPC = 0;
-stack<pair<string, int> > st;          // stores the function name and the previous pc value
+stack<pair<string, int>> st;          // stores the function name and the previous pc value
 unordered_map<int, bool> breakpoints; // stores breakpoint status for each line
 unordered_map<std::string, std::string> opcode;
 unordered_map<int, int> labelIndex;
@@ -332,7 +332,7 @@ bool getLabels(string file)
             }
             else
             {
-                cout << "Line " << (pc / 4 + 1) << ": Multiple Definitions for label" << endl;
+                cout << "Line " << (pc / 4 + 1 + memLines) << ": Multiple Definitions for label" << endl;
                 return false;
             }
         }
@@ -735,7 +735,7 @@ pair<vector<string>, bool> getArguments(int line, int count, string args, bool f
 pair<int, bool> getImmediate(string str, int pc, unordered_map<string, int> label, bool flag)
 {
     int imm, neg = 0;
-    int line = pc / 4 + 1;
+    int line = pc / 4 + 1 + memLines;
     bool err = false;
     if (str[0] == '-')
     {
@@ -855,19 +855,19 @@ pair<int, bool> convert(string line, int pc, bool step)
     }
     if (instr == "")
     {
-        cout << "Line " << (pc / 4 + 1) << ": Invalid Instruction" << endl;
+        cout << "Line " << lineNum << ": Invalid Instruction" << endl;
         return make_pair(-1, flag);
     }
     if (opcode.find(instr) == opcode.end())
     {
-        cout << "Line " << (pc / 4 + 1) << ": Instruction " << instr << " not found" << endl;
+        cout << "Line " << lineNum << ": Instruction " << instr << " not found" << endl;
         return make_pair(-1, flag);
     }
     if (opcode[instr] == "0110011") // R type instructions and,xor,or,add,sub,sll,srl,sra,slt,sltu
     {
         vector<string> arguments;
         bool err;
-        pair<vector<string>, bool> res = getArguments(pc / 4 + 1, 3, args, false);
+        pair<vector<string>, bool> res = getArguments(lineNum, 3, args, false);
         err = res.second;
         arguments = res.first;
         if (err)
@@ -875,15 +875,15 @@ pair<int, bool> convert(string line, int pc, bool step)
             return make_pair(-1, flag);
         }
         int rd, rs1, rs2;
-        rd = getRegister(arguments[0], alias, pc / 4 + 1);
-        rs1 = getRegister(arguments[1], alias, pc / 4 + 1);
-        rs2 = getRegister(arguments[2], alias, pc / 4 + 1);
+        rd = getRegister(arguments[0], alias, lineNum);
+        rs1 = getRegister(arguments[1], alias, lineNum);
+        rs2 = getRegister(arguments[2], alias, lineNum);
         if (rd == -1 || rs1 == -1 || rs2 == -1)
         {
             return make_pair(-1, flag);
         }
 
-        if (checkRegister(rd, pc / 4 + 1) || checkRegister(rs1, pc / 4 + 1) || checkRegister(rs2, pc / 4 + 1))
+        if (checkRegister(rd, lineNum) || checkRegister(rs1, lineNum) || checkRegister(rs2, lineNum))
         {
             return make_pair(-1, flag);
         }
@@ -901,13 +901,13 @@ pair<int, bool> convert(string line, int pc, bool step)
         int prev = -1;
         int rd, rs1;
         int imm;
-        arguments = getArguments(pc / 4 + 1, 3, args, false).first;
-        rd = getRegister(arguments[0], alias, pc / 4 + 1);
-        rs1 = getRegister(arguments[1], alias, pc / 4 + 1);
+        arguments = getArguments(lineNum, 3, args, false).first;
+        rd = getRegister(arguments[0], alias, lineNum);
+        rs1 = getRegister(arguments[1], alias, lineNum);
         if (rd == -1 || rs1 == -1)
             return make_pair(-1, flag);
 
-        if (checkRegister(rd, pc / 4 + 1) || checkRegister(rs1, pc / 4 + 1))
+        if (checkRegister(rd, lineNum) || checkRegister(rs1, lineNum))
         {
             return make_pair(-1, flag);
         }
@@ -918,7 +918,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         imm = res.first;
         if (imm > 2047 || imm < -2048)
         {
-            cout << "Line " << (pc / 4 + 1) << ": Value cannot be stored in 12 bits" << endl;
+            cout << "Line " << lineNum << ": Value cannot be stored in 12 bits" << endl;
             return make_pair(-1, flag);
         }
 
@@ -926,16 +926,16 @@ pair<int, bool> convert(string line, int pc, bool step)
         {
             if (imm > 63 || imm < 0)
             {
-                cout << "Line " << (pc / 4 + 1) << ": Cannot shift by " << imm << " bits" << endl;
+                cout << "Line " << lineNum << ": Cannot shift by " << imm << " bits" << endl;
                 return make_pair(-1, flag);
             }
         }
         if (instr == "srai") // special case of srai where the 6 MSB bits are always having value 16
         {
-            pair<int, bool> res = hexToInt("0x10", pc / 4 + 1);
+            pair<int, bool> res = hexToInt("0x10", lineNum);
             if (res.second)
             {
-                cout << "Line " << (pc / 4 + 1) << ": Invalid immediate" << endl;
+                cout << "Line " << lineNum << ": Invalid immediate" << endl;
                 return make_pair(-1, flag);
             }
 
@@ -957,14 +957,14 @@ pair<int, bool> convert(string line, int pc, bool step)
         int count = 0;
         int index = 0;
         int prev = -1;
-        arguments = getArguments(pc / 4 + 1, 3, args, true).first;
+        arguments = getArguments(lineNum, 3, args, true).first;
         int rd, rs1, imm;
-        rd = getRegister(arguments[0], alias, pc / 4 + 1);
-        rs1 = getRegister(arguments[2], alias, pc / 4 + 1);
+        rd = getRegister(arguments[0], alias, lineNum);
+        rs1 = getRegister(arguments[2], alias, lineNum);
         if (rd == -1 || rs1 == -1)
             return make_pair(-1, flag);
 
-        if (checkRegister(rd, pc / 4 + 1) || checkRegister(rs1, pc / 4 + 1))
+        if (checkRegister(rd, lineNum) || checkRegister(rs1, lineNum))
         {
             return make_pair(-1, flag);
         }
@@ -973,7 +973,7 @@ pair<int, bool> convert(string line, int pc, bool step)
 
         if (imm > 2047 || imm < -2048)
         {
-            cout << "Line: " << (pc / 4 + 1) << " Value cannot be stored in 12 bits" << endl;
+            cout << "Line: " << lineNum << " Value cannot be stored in 12 bits" << endl;
             return make_pair(-1, flag);
         }
 
@@ -991,7 +991,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         unsigned long address = registers[rs1] + imm;
         if (address > memsize)
         {
-            cout << "Line: " << (pc / 4 + 1) << " Memory address out of bounds" << endl;
+            cout << "Line: " << lineNum << " Memory address out of bounds" << endl;
             return make_pair(-1, flag);
         }
 
@@ -1052,15 +1052,15 @@ pair<int, bool> convert(string line, int pc, bool step)
         int count = 0;
         int index = 0;
         int prev = -1;
-        arguments = getArguments(pc / 4 + 1, 3, args, true).first;
+        arguments = getArguments(lineNum, 3, args, true).first;
         int rs2, rs1, imm;
 
-        rs2 = getRegister(arguments[0], alias, pc / 4 + 1);
-        rs1 = getRegister(arguments[2], alias, pc / 4 + 1);
+        rs2 = getRegister(arguments[0], alias, lineNum);
+        rs1 = getRegister(arguments[2], alias, lineNum);
         if (rs2 == -1 || rs1 == -1)
             return make_pair(-1, flag);
 
-        if (checkRegister(rs2, pc / 4 + 1) || checkRegister(rs1, pc / 4 + 1))
+        if (checkRegister(rs2, lineNum) || checkRegister(rs1, lineNum))
         {
             return make_pair(-1, flag);
         }
@@ -1068,7 +1068,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         imm = res.first;
         if (imm > 2047 || imm < -2048)
         {
-            cout << "Line: " << (pc / 4 + 1) << ": Value cannot be stored in 12 bits" << endl;
+            cout << "Line: " << lineNum << ": Value cannot be stored in 12 bits" << endl;
             return make_pair(-1, flag);
         }
         long num = registers[rs2];
@@ -1092,7 +1092,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         unsigned long address = registers[rs1] + imm;
         if (address < 0x10000)
         {
-            cout << "Line: " << (pc / 4 + 1) << ": Segmentation Fault" << endl;
+            cout << "Line: " << lineNum << ": Segmentation Fault" << endl;
             return make_pair(-1, flag);
         }
         for (unsigned long i = 0; i < size; ++i)
@@ -1104,18 +1104,18 @@ pair<int, bool> convert(string line, int pc, bool step)
     {
         vector<string> arguments;
         bool err;
-        pair<vector<string>, bool> res = getArguments(pc / 4 + 1, 3, args, false);
+        pair<vector<string>, bool> res = getArguments(lineNum, 3, args, false);
         err = res.second;
         arguments = res.first;
         if (err)
             return make_pair(-1, flag);
         int rs2, rs1, imm;
 
-        rs1 = getRegister(arguments[0], alias, pc / 4 + 1);
-        rs2 = getRegister(arguments[1], alias, pc / 4 + 1);
+        rs1 = getRegister(arguments[0], alias, lineNum);
+        rs2 = getRegister(arguments[1], alias, lineNum);
         if (rs2 == -1 || rs1 == -1)
             return make_pair(-1, flag);
-        if (checkRegister(rs2, pc / 4 + 1) || checkRegister(rs1, pc / 4 + 1))
+        if (checkRegister(rs2, lineNum) || checkRegister(rs1, lineNum))
         {
             return make_pair(-1, flag);
         }
@@ -1124,7 +1124,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         int curr_label = res1.first;
         if (curr_label > 4095 || curr_label < -4096)
         {
-            cout << "Line: " << (pc / 4 + 1) << " value cannot be stored in 13 bits" << endl;
+            cout << "Line: " << lineNum << " value cannot be stored in 13 bits" << endl;
             return make_pair(-1, flag);
         }
         int neg = (arguments[2][0] == '-' ? 1 : 0);
@@ -1179,14 +1179,14 @@ pair<int, bool> convert(string line, int pc, bool step)
         int count = 0;
         int index = 0;
         int prev = -1;
-        arguments = getArguments(pc / 4 + 1, 2, args, false).first;
+        arguments = getArguments(lineNum, 2, args, false).first;
 
         int rd, imm;
 
-        rd = getRegister(arguments[0], alias, pc / 4 + 1);
+        rd = getRegister(arguments[0], alias, lineNum);
         if (rd == -1)
             return make_pair(-1, flag);
-        if (checkRegister(rd, pc / 4 + 1))
+        if (checkRegister(rd, lineNum))
         {
             return make_pair(-1, flag);
         }
@@ -1195,7 +1195,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         bool flag = getImmediate(arguments[1], pc, label, true).second;
         if (curr_label > 1048575 || curr_label < -1048576)
         {
-            cout << "Line: " << (pc / 4 + 1) << " value cannot be stored in 21 bits" << endl;
+            cout << "Line: " << lineNum << " value cannot be stored in 21 bits" << endl;
             return make_pair(-1, flag);
         }
         imm = curr_label;
@@ -1220,7 +1220,7 @@ pair<int, bool> convert(string line, int pc, bool step)
     }
     else if (opcode[instr] == "0110111") // lui
     {
-        pair<vector<string>, bool> res = getArguments(pc / 4 + 1, 2, args, false);
+        pair<vector<string>, bool> res = getArguments(lineNum, 2, args, false);
         bool err = res.second;
         vector<string> arguments = res.first;
         if (err)
@@ -1228,10 +1228,10 @@ pair<int, bool> convert(string line, int pc, bool step)
         int rd;
         int imm;
 
-        rd = getRegister(arguments[0], alias, pc / 4 + 1);
+        rd = getRegister(arguments[0], alias, lineNum);
         if (rd == -1)
             return make_pair(-1, flag);
-        if (checkRegister(rd, pc / 4 + 1))
+        if (checkRegister(rd, lineNum))
         {
             return make_pair(-1, flag);
         }
@@ -1240,7 +1240,7 @@ pair<int, bool> convert(string line, int pc, bool step)
 
         if (val[0] == '-')
         {
-            cout << "Line: " << (pc / 4 + 1) << " value cannot be negative" << endl;
+            cout << "Line: " << lineNum << " value cannot be negative" << endl;
             return make_pair(-1, flag);
         }
         size_t i = 0;
@@ -1255,12 +1255,12 @@ pair<int, bool> convert(string line, int pc, bool step)
         }
         if (i != val.length())
         {
-            cout << "Line " << (pc / 4 + 1) << " : Wrong immediate value " << endl;
+            cout << "Line " << lineNum << " : Wrong immediate value " << endl;
             return make_pair(-1, flag);
         }
         if (imm >> 31 > 0)
         {
-            cout << "Line " << (pc / 4 + 1) << " Immediate value cannot be stored in 20 bits" << endl;
+            cout << "Line " << lineNum << " Immediate value cannot be stored in 20 bits" << endl;
             return make_pair(-1, flag);
         }
         long int imm2 = (long)imm;
@@ -1458,8 +1458,8 @@ void step(bool toPrint)
     else if (res != 0 || flag) // if branch or jump
     {
         string hexPC = decToHex(mainPC);
-        if(toPrint)
-            cout << "Executed " << line.substr(labelIndex[mainPC]) << endl;// "; PC = " << "0x" + addZeroes(hexPC, 8) << endl;
+        if (toPrint)
+            cout << "Executed " << line.substr(labelIndex[mainPC]) << endl; // "; PC = " << "0x" + addZeroes(hexPC, 8) << endl;
         pair<string, int> temp(st.top().first, mainPC / 4 + 1 + memLines);
         mainPC = res;
         if (funcReturn)
@@ -1483,8 +1483,8 @@ void step(bool toPrint)
         st.pop();
         st.push(temp);
         string hexPC = decToHex(mainPC);
-        if(toPrint)
-            cout << "Executed " << line.substr(labelIndex[mainPC]) << endl;//<< "; PC = " << "0x" + addZeroes(hexPC, 8) << endl;
+        if (toPrint)
+            cout << "Executed " << line.substr(labelIndex[mainPC]) << endl; //<< "; PC = " << "0x" + addZeroes(hexPC, 8) << endl;
         mainPC += 4;
     }
 
@@ -1498,7 +1498,7 @@ void step(bool toPrint)
 
 void updateStatus(int pc)
 {
-    
+
     int stepsRequired = pc / 4;
 
     for (int i = 0; i < stepsRequired; ++i)
@@ -1541,8 +1541,8 @@ void removeBreakpoint(int line)
 */
 void showStack()
 {
-    stack<pair<string, int> > stTemp = st;
-    stack<pair<string, int> > stTemp1;
+    stack<pair<string, int>> stTemp = st;
+    stack<pair<string, int>> stTemp1;
     if (st.empty())
     {
         cout << "Empty Call Stack: Execution complete" << endl;
