@@ -1,35 +1,133 @@
-.mem{
+.mem {
     margin-top: 2em;
     width: 100%;
-}
-
-.row-title{
-    background-color: #44475a;
-    display: flex;
-    flex-direction: row;
-    align-items: space-between;
-    justify-content: space-between;
-    h1{
+    padding: 0 1em; /* Add padding to avoid content touching edges */
+    .row-title {
+        background-color: #44475a;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;  /* Centering items vertically */
+        padding: 0.5em;
+        flex-wrap: wrap; /* Allow row-title to wrap on small screens */
+    }
+    
+    .row-title h1 {
         color: #f8f8f2;
+        font-size: 1.2em;
+        margin-left: 1em;
+        margin-bottom: 0.5em;
+    }
+    
+    .row {
+        background-color: #282a36;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 0.5em;
+        padding: 0.5em;
+        border-radius: 8px;
+        flex-wrap: wrap;  /* Allow row to wrap on small screens */
+    }
+    
+    .mem-address,
+    .mem-byte {
         font-size: 1.5em;
         margin-left: 1em;
+        margin-right: 1em;
+        margin-bottom: 0.5em;
     }
+    
+    /* Button styles */
+    .buttons button {
+        background-color: #6272a4;
+        color: #f8f8f2;
+        padding: 0.5em 1em;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.2em;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin: 0.5em;
+    }
+    
+    .buttons button:hover {
+        background-color: #50fa7b;
+    }
+    
+    .buttons button:disabled {
+        background-color: #6272a4;
+        cursor: not-allowed;
+    }
+    
+    /* Hover effect for rows */
+    .row:hover {
+        background-color: #44475a;
+        cursor: pointer;
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .row-title{
+            display: none;
+        }
+
+        .row-title h1 {
+            font-size: 1em; /* Smaller font size on mobile */
+            margin-left: 0.5em;
+        }
+    
+        .row {
+            flex-direction: column; /* Stack elements vertically on smaller screens */
+            align-items: flex-start;  /* Align items to the left */
+        }
+    
+        .mem-address, .mem-byte {
+            font-size: 1.2em;  /* Slightly smaller font on mobile */
+            margin-left: 0.5em;
+            margin-right: 0.5em;
+        }
+
+        .mem-address{
+            background-color: #6272a4;
+            padding: 0.5em;
+        }
+    
+        .buttons button {
+            font-size: 1em;  /* Smaller font for mobile */
+            padding: 0.5em;
+        }
+    }
+    
+    /* For very small screens (phones in portrait mode) */
+    @media (max-width: 480px) {
+        .row-title{
+            display: none;
+        }
+        
+        .row-title h1 {
+            font-size: 0.9em;  /* Smaller font size on very small screens */
+        }
+    
+        .row {
+            padding: 0.3em;  /* Reduced padding for smaller devices */
+        }
+    
+        .mem-address, .mem-byte {
+            font-size: 1em;  /* Even smaller font on very small screens */
+        }
+
+        .mem-address{
+            background-color: #6272a4;
+            padding: 0.5em;
+        }
+    
+        .buttons button {
+            font-size: 0.9em;  /* Even smaller font size */
+            padding: 0.4em 0.8em;
+        }
+    }
+    
 }
 
-.row{
-    background-color: #282a36;
-    display: flex;
-    flex-direction: row;
-    align-items: space-between;
-    justify-content: space-between;
-    margin-top: 0.5em;
-}
-
-.mem-address{
-    font-size: 1.5em;
-    margin-left: 1em;
-}
-
-.mem-byte{
-    font-size: 1.5em;
-}

@@ -5,15 +5,9 @@ import './Navbar.css'; // Assuming you have some CSS for styling
 const Navbar = () => {
     return (
         <nav className="navbar">
-            <div className='nav-title'>
-                <Link to="/">RISC-V</Link>
-            </div>
-            <div className="nav-link">
-                <Link to="/editor">Editor</Link>
-            </div>
-            <div className="nav-link">
-                <Link to="/memory">Memory</Link>
-            </div>
+            <Link to="/" className='nav-title'>RISC-V</Link>
+            <Link to="/editor" className="nav-link">Editor</Link>
+            <Link to="/memory" className="nav-link">Memory</Link>
         </nav>
     );
 };

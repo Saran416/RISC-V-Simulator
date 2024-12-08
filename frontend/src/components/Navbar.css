@@ -19,6 +19,9 @@
     padding-right: 10em;
     @media screen and (max-width: 600px) {
         .nav-title{
+            width: 100%;
+            display: flex;
+            position: relative;
             color: white;
             font-size: 3em;
             font-weight: 900;
@@ -55,6 +58,7 @@
 .nav-link:hover{
     background-color: #111;
     border-radius: 0.5em;
+    width: auto;
 }
 
 /* Media Queries */

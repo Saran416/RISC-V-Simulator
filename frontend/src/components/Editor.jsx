@@ -11,11 +11,9 @@ const Editor = () => {
     // Default code text without leading indentation or newlines
     const defaultText = `.data
 .text`;
-    const [code, setCode] = useState(defaultText);  // Set initial code in the state
-    const [pc, setPc] = useState(0);  // Initialize program counter state
-    const { updateRegs, updateMem, defaultInitialise , log, updateLog, err, updateErr} = useContext(DataContext);
+    const [code, setCode] = useState(defaultText);  // Set initial code in the state  
+    const { updateRegs, updateMem, defaultInitialise , log, updateLog, err, updateErr, pc, updatePc} = useContext(DataContext);
 
-    const prevPcRef = useRef(pc);  // To store the previous pc value for debugging purposes
 
     // Save code to local storage whenever it changes
     useEffect(() => {
@@ -35,7 +33,7 @@ const Editor = () => {
 
     const runCode = async () => {
         try {
-            const response = await fetch('http://localhost:5069/getData', {
+            const response = await fetch('http://192.168.51.120:3000/getData', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -47,11 +45,11 @@ const Editor = () => {
                 throw new Error('Failed to fetch data');
             }
 
-            const { registers, memory, statuslog } = await response.json(); // Extract registers and memory from response
+            const { registers, memory, statuslog, gpc } = await response.json(); // Extract registers and memory from response
             // console.log("Printing registers and memory:");
             // console.log(registers);  // Print registers
             console.log(statuslog);  // Print memory
-
+            updatePc(gpc);
             if(statuslog[0] === 'E' || statuslog[0] === "C"){
                 updateLog(statuslog);
                 updateErr(false);
@@ -78,7 +76,7 @@ const Editor = () => {
     const stepCode = async () => {
         try {
             // console.log(`Current PC before step: ${pc}`);
-            const response = await fetch('http://localhost:5069/getData', {
+            const response = await fetch('http://192.168.51.120:3000/getData', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -90,7 +88,8 @@ const Editor = () => {
                 throw new Error('Failed to fetch data');
             }
 
-            const { registers, memory, statuslog } = await response.json(); // Extract registers and memory from response
+            const { registers, memory, statuslog, gpc } = await response.json(); // Extract registers and memory from response
+            updatePc(gpc);
             // console.log("Printing registers and memory:");
             // console.log(registers);  // Print registers
             console.log(statuslog);  // Print memory
@@ -127,7 +126,7 @@ const Editor = () => {
     const restart =     async () => {
         updateLog('Reset Successful');
         updateErr(false);
-        const response = await fetch('http://localhost:5069/setzero', {
+        const response = await fetch('http://192.168.51.120:3000/setzero', {
             method: 'GET',
         });
         defaultInitialise();

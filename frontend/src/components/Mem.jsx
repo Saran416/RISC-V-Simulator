@@ -5,7 +5,7 @@ import { DataContext } from "../context/DataContext.jsx";
 const Mem = () => {
   const { mem } = useContext(DataContext);  // Getting memory from context
   const baseAddress = 0x10000;  // Starting address for memory
-  const rowsPerPage = 20;  // Number of rows to display per page (8 bytes per row)
+  const rowsPerPage = 15;  // Number of rows to display per page (8 bytes per row)
   const [startIndex, setStartIndex] = useState(0);  // Current page index
 
   // Convert memory object into an array grouped by lines of 8 bytes
