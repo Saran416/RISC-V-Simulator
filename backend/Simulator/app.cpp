@@ -13,19 +13,21 @@
 using namespace std;
 
 int main(int argc, char *argv[])
-{
-    string filename = "";
+{   
+    string uid = argv[3];
+    string filename = "input" + uid + ".s";
     // we see the first argument and if it is "run" we run the program till the end
     if (string(argv[1]) == "run")
     {
-        loadProgram("input.s");
+
+        loadProgram(filename);
         updateStatus(stoi(argv[2]));
         run(true);
     }
 
     else if (string(argv[1]) == "step")
     {
-        loadProgram("input.s");
+        loadProgram(filename);
         updateStatus(stoi(argv[2]));
         step(true);
     }

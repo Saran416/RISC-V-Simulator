@@ -18,9 +18,9 @@ using namespace std;
 long int registers[32]; // 32 registers
 unsigned long memsize = 0x50000;
 unsigned char memory[0x50000];   // byte addressable memory
-vector<pair<int, string>> lines; // stores the pc and the line
+vector<pair<int, string> > lines; // stores the pc and the line
 int mainPC = 0;
-stack<pair<string, int>> st;          // stores the function name and the previous pc value
+stack<pair<string, int> > st;          // stores the function name and the previous pc value
 unordered_map<int, bool> breakpoints; // stores breakpoint status for each line
 unordered_map<std::string, std::string> opcode;
 unordered_map<int, int> labelIndex;
@@ -1562,8 +1562,8 @@ void removeBreakpoint(int line)
 */
 void showStack()
 {
-    stack<pair<string, int>> stTemp = st;
-    stack<pair<string, int>> stTemp1;
+    stack<pair<string, int> > stTemp = st;
+    stack<pair<string, int> > stTemp1;
     if (st.empty())
     {
         cout << "Empty Call Stack: Execution complete" << endl;

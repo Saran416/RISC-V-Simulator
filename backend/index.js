@@ -3,6 +3,7 @@ const cors = require('cors');
 const fs = require('fs').promises;  // Use the promise-based version of fs
 const { spawn } = require('child_process');
 const app = express();
+const {v4: uuidv4} = require('uuid');
 
 app.use(cors());
 app.use(express.json());
@@ -13,22 +14,23 @@ app.post('/getData', async (req, res) => {
     console.log('Received code:', code);
     console.log('Received arg:', arg);
     console.log('Received pc:', gpc);
+    const UID = uuidv4();
 
     try {
         // Asynchronously write the code to the file
-        await fs.writeFile('./Simulator/input.s', code);
+        await fs.writeFile(`./Simulator/input${UID}.s`, code);
         console.log('File written successfully');
-
-        const simProcess = spawn('./riscv_sim', [arg, gpc], { cwd: './Simulator' });
-        console.log(`./riscv_sim ${arg} ${gpc}`);
-
+        
+        const simProcess = spawn('./riscv_sim', [arg, gpc, UID], { cwd: './Simulator' });
+        console.log(`./riscv_sim ${arg} ${gpc} ${UID}`);
+        
         let dataOutput = "";
 
         if (arg === 'step') {
             console.log("checking for step");
             gpc += 4;
         }
-
+        
         if (arg === 'run') {
             console.log("checking for run");
             gpc = 0;
@@ -39,7 +41,7 @@ app.post('/getData', async (req, res) => {
         });
 
         // Wait for the simulation process to close and handle the output
-        simProcess.on('close', () => {
+        simProcess.on('close',async () => {
             const lines = dataOutput.split('\n');
             let registers = {};
             let memory = {};
@@ -71,10 +73,12 @@ app.post('/getData', async (req, res) => {
                         memCount++;
                     }
                 }
+                await fs.unlink(`./Simulator/input${UID}.s`);
+
                 res.json({ success: true, registers: registers, memory: memory, statuslog: statuslog, gpc: gpc });
             }
         });
-
+        
         simProcess.on('error', (error) => {
             console.error('Error executing simulator', error);
             res.status(500).json({ success: false, message: 'Simulator execution failed' });
@@ -88,9 +92,13 @@ app.post('/getData', async (req, res) => {
 
 app.get('/setzero', async (req, res) => {
     gpc = 0;
-    res.json({ success: true, message: 'PC set to zero' });
+    res.json({ success: true, message: 'PC set to zero' , gpc: gpc});
 });
 
-app.listen(3000, '192.168.51.120', () => {
+app.listen(3000, () => {
     console.log('Server running on port 3000');
 });
+
+// app.listen(3000, '192.168.51.120', () => {
+//     console.log('Server running on port 3000');
+// });
