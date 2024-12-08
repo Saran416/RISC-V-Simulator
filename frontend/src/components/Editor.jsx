@@ -33,7 +33,15 @@ const Editor = () => {
 
     const runCode = async () => {
         try {
-            const response = await fetch('http://192.168.51.120:3000/getData', {
+            // const response = await fetch('http://192.168.51.120:3000/getData', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //     },
+            //     body: JSON.stringify({ code: code, arg: 'run', pc: pc }),
+            // });
+
+            const response = await fetch('http://localhost:3000/getData', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -76,7 +84,15 @@ const Editor = () => {
     const stepCode = async () => {
         try {
             // console.log(`Current PC before step: ${pc}`);
-            const response = await fetch('http://192.168.51.120:3000/getData', {
+            // const response = await fetch('http://192.168.51.120:3000/getData', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //     },
+            //     body: JSON.stringify({ code: code, arg: 'step', pc: pc }),
+            // });
+
+            const response = await fetch('http://localhost:3000/getData', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -126,7 +142,10 @@ const Editor = () => {
     const restart =     async () => {
         updateLog('Reset Successful');
         updateErr(false);
-        const response = await fetch('http://192.168.51.120:3000/setzero', {
+        // const response = await fetch('http://192.168.51.120:3000/setzero', {
+        //     method: 'GET',
+        // });
+        const response = await fetch('http://localhost:3000/setzero', {
             method: 'GET',
         });
         defaultInitialise();

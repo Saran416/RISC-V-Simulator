@@ -91,6 +91,12 @@ app.get('/setzero', async (req, res) => {
     res.json({ success: true, message: 'PC set to zero' });
 });
 
-app.listen(3000, '192.168.51.120', () => {
+// when running on VM
+// app.listen(3000, '192.168.51.120', () => {
+//     console.log('Server running on port 3000');
+// });
+
+// when running on localhost
+app.listen(3000, () => {
     console.log('Server running on port 3000');
 });
