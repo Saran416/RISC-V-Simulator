@@ -1,4 +1,4 @@
-all: riscv_sim
+all: riscv_sim riscv_asm
 
 riscv_sim: simulator.o app.o
 	g++ simulator.o app.o -o riscv_sim
@@ -19,4 +19,4 @@ assemblerApp.o: assemblerApp.cpp
 	g++ -c assemblerApp.cpp -o assemblerApp.o
 
 clean:
-	rm -f simulator.o app.o riscv_sim
+	rm -f simulator.o app.o riscv_sim assembler.o assemblerApp.o riscv_asm
