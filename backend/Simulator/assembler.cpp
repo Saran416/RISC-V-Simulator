@@ -840,10 +840,10 @@ int convert()
             {
                 imm_12_31 = imm;
             }
-
+            
             ans = bitset<20>(imm_12_31).to_string() + bitset<5>(rd).to_string() + opcode[instr];
         }
-        output << binToHex(ans) << endl;
+        cout << binToHex(ans) << endl;
         pc += 4;
     }
 
