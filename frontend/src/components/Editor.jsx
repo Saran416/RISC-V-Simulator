@@ -1,46 +1,85 @@
+import React, { useState, useEffect, useContext } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
-import React, { useState, useEffect, useContext, useRef } from 'react';
-import './Editor.css';
 import { dracula } from '@uiw/codemirror-theme-dracula';
 import { DataContext } from '../context/DataContext.jsx';
 import runIcon from '../assets/run.svg';
 import stepIcon from '../assets/step.svg';
 import restartIcon from '../assets/restart.svg';
+import { EditorView, Decoration, ViewPlugin } from '@codemirror/view';
+import './Editor.css';
 
 const Editor = () => {
-    // Default code text without leading indentation or newlines
-    const defaultText = `.data
-.text`;
-    const [code, setCode] = useState(defaultText);  // Set initial code in the state  
-    const { updateRegs, updateMem, defaultInitialise , log, updateLog, err, updateErr, pc, updatePc} = useContext(DataContext);
+    const defaultText = `.data\n.text`;
+    const [code, setCode] = useState(defaultText);
+    let offset = 0;
+    let number = 2;
+    const { updateRegs, updateMem, defaultInitialise, log, updateLog, err, updateErr, pc, updatePc } = useContext(DataContext);
+    const [highlightedLine, setHighlightedLine] = useState(1);
 
 
-    // Save code to local storage whenever it changes
     useEffect(() => {
         if (code !== defaultText) {
             localStorage.setItem('curr_code', code);
         }
     }, [code]);
 
-
-    // Load code and program counter from local storage if available
     useEffect(() => {
         const savedCode = localStorage.getItem('curr_code');
         if (savedCode) {
             setCode(savedCode);
         }
-    }, []); 
+    }, []);
+
+
+    const findTextLine = () => {
+        const lines = code.split('\n'); // Split the code into lines
+        number = lines.length;
+        console.log("Number of line" + number);
+        for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes('.text')) {
+                console.log("found" + (i + 1))
+                return i + 1; // Return the 1-indexed line number
+            }
+        }
+        return 1; // Return null if ".text" is not found
+    };
+
+    useEffect(() => {
+        offset = findTextLine();
+        console.log(offset);
+        // Update the highlighted line whenever `pc` changes
+        const newLineNumber = (pc / 4) + 1 + offset; // Assuming 4 bytes per line
+        setHighlightedLine(newLineNumber);
+    }, [pc, code]);
+
+    // Line highlighting plugin
+    const lineHighlightPlugin = ViewPlugin.fromClass(
+        class {
+            constructor(view) {
+                this.decorations = this.createHighlight(view, highlightedLine);
+            }
+
+            update(update) {
+                if (update.docChanged || update.transactions.length > 0) {
+                    this.decorations = this.createHighlight(update.view, highlightedLine);
+                }
+            }
+
+            createHighlight(view, lineNumber) {
+                const line = view.state.doc.line(lineNumber);
+                console.log('Highlighting line:', line);
+                return Decoration.set([
+                    Decoration.line({ attributes: { class: 'highlight-line' } }).range(line.from),
+                ]);
+            }
+        },
+        {
+            decorations: (plugin) => plugin.decorations,
+        }
+    );
 
     const runCode = async () => {
         try {
-            // const response = await fetch('http://192.168.51.120:3000/getData', {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //     },
-            //     body: JSON.stringify({ code: code, arg: 'run', pc: pc }),
-            // });
-
             const response = await fetch('http://localhost:3000/getData', {
                 method: 'POST',
                 headers: {
@@ -48,50 +87,36 @@ const Editor = () => {
                 },
                 body: JSON.stringify({ code: code, arg: 'run', pc: pc }),
             });
-            
+
             if (!response.ok) {
                 throw new Error('Failed to fetch data');
             }
 
-            const { registers, memory, statuslog, gpc } = await response.json(); // Extract registers and memory from response
-            // console.log("Printing registers and memory:");
-            // console.log(registers);  // Print registers
-            console.log(statuslog);  // Print memory
-            updatePc(gpc);
-            if(statuslog[0] === 'E' || statuslog[0] === "C"){
+            const { registers, memory, statuslog } = await response.json();
+            // console.log(statuslog);
+
+            if (statuslog[0] === 'E' || statuslog[0] === 'C') {
                 updateLog(statuslog);
                 updateErr(false);
-            }
-            else
-            {
-                updateLog(statuslog)
+                updatePc(0);
+            } else {
+                updateLog(statuslog);
                 updateErr(true);
             }
 
-            if (Object.keys(registers).length !== 0 && (statuslog[0] === 'E' || statuslog[0] === "C"))  {
-                updateRegs(registers);   // Update context with registers
+            if (Object.keys(registers).length !== 0 && (statuslog[0] === 'E' || statuslog[0] === 'C')) {
+                updateRegs(registers);
                 updateMem(memory);
-                // updateErr(false);  // Reset error state
-                // updateLog(statuslog);
             }
         } catch (error) {
-            updateErr(true);  // Set error state
+            updateErr(true);
             updateLog(error.message);
-            console.error('Error running code:', error);  // Handle any errors
+            console.error('Error running code:', error);
         }
     };
 
     const stepCode = async () => {
         try {
-            // console.log(`Current PC before step: ${pc}`);
-            // const response = await fetch('http://192.168.51.120:3000/getData', {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //     },
-            //     body: JSON.stringify({ code: code, arg: 'step', pc: pc }),
-            // });
-
             const response = await fetch('http://localhost:3000/getData', {
                 method: 'POST',
                 headers: {
@@ -104,66 +129,52 @@ const Editor = () => {
                 throw new Error('Failed to fetch data');
             }
 
-            const { registers, memory, statuslog, gpc } = await response.json(); // Extract registers and memory from response
-            updatePc(gpc);
-            // console.log("Printing registers and memory:");
-            // console.log(registers);  // Print registers
-            console.log(statuslog);  // Print memory
+            const { registers, memory, statuslog } = await response.json();
+            // console.log(statuslog);
 
-            if(statuslog[0] === 'E' || statuslog[0] === "C"){
+            if (statuslog[0] === 'E' || statuslog[0] === 'C') {
                 updateLog(statuslog);
                 updateErr(false);
-            }
-            // if statuslog is empty string
-            else if(statuslog === ""){
-                updateLog("Nothing to step");
+                updatePc(pc + 4);
+            } else if (statuslog === '') {
+                updateLog('Nothing to step');
                 updateErr(true);
-            }
-            else
-            {
-                updateLog(statuslog)
+            } else {
+                updateLog(statuslog);
                 updateErr(true);
             }
 
-
-            if (Object.keys(registers).length !== 0 && (statuslog[0] === 'E' || statuslog[0] === "C"))  {
-                updateRegs(registers);   // Update context with registers
+            if (Object.keys(registers).length !== 0 && (statuslog[0] === 'E' || statuslog[0] === 'C')) {
+                updateRegs(registers);
                 updateMem(memory);
-                // updateErr(false);  // Reset error state
-                // updateLog(statuslog);
             }
         } catch (error) {
-            updateErr(true);  // Set error state
+            updateErr(true);
             updateLog(error.message);
-            console.error('Error running code:', error);  // Handle any errors
+            console.error('Error running code:', error);
         }
     };
 
-    const restart =     async () => {
+    const restart = async () => {
         updateLog('Reset Successful');
         updateErr(false);
-        // const response = await fetch('http://192.168.51.120:3000/setzero', {
-        //     method: 'GET',
-        // });
-        const response = await fetch('http://localhost:3000/setzero', {
-            method: 'GET',
-        });
+        await fetch('http://localhost:3000/setzero', { method: 'GET' });
         defaultInitialise();
+        updatePc(0);
     };
 
-
     return (
-        <div className='code-area'>
+        <div className="code-area">
             <div className="toolbar">
                 <div className="toolbar-buttons">
-                    <button className='run' onClick={runCode}>
-                        <img src={runIcon} alt="Run" className='icon' />
+                    <button className="run" onClick={runCode}>
+                        <img src={runIcon} alt="Run" className="icon" />
                     </button>
-                    <button className='step' onClick={stepCode}>
-                        <img src={stepIcon} alt="Step" className='icon' />
+                    <button className="step" onClick={stepCode}>
+                        <img src={stepIcon} alt="Step" className="icon" />
                     </button>
-                    <button className='stop' onClick={restart}>
-                        <img src={restartIcon} alt="Restart" className='icon' />
+                    <button className="stop" onClick={restart}>
+                        <img src={restartIcon} alt="Restart" className="icon" />
                     </button>
                 </div>
                 <div className="toolbar-log">
@@ -173,17 +184,8 @@ const Editor = () => {
             <div className="editor">
                 <CodeMirror
                     value={code}
-                    options={{
-                        mode: 'python',  // Set the language mode
-                        lineNumbers: true,   // Show line numbers
-                        lineWrapping: true,  // Enable line wrapping (optional)
-                        matchBrackets: true,  // Highlight matching brackets
-                        autoCloseBrackets: true,  // Auto close brackets
-                    }}
-                    onChange={(data) => {
-                        setCode(data); // Update the state with the code string
-                    }}
-                    theme={dracula} // Set the theme
+                    extensions={[dracula, lineHighlightPlugin]}
+                    onChange={(data) => setCode(data)}
                 />
             </div>
         </div>

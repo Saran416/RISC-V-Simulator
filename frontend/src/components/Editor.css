@@ -98,3 +98,26 @@
     }
 }
 
+.highlight-line {
+    background-color: rgb(255, 115, 115) !important; /* Light red background */
+}
+
+.cm-content {
+    background-color: #282a36;
+    border-radius: 0% !important; /* Ensure text color is inherited from the Dracula theme */
+}
+
+.cm-gutters
+{
+    background-color: #282a36;
+    color: #f8f8f2;
+    border-radius: 0% !important; /* Ensure text color is inherited from the Dracula theme */
+}
+
+.cm-line{
+    border-radius: 0% !important;
+}
+
+.cm-activeLineGutter{
+    border-radius: 0% !important;
+}

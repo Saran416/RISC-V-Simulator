@@ -11,7 +11,6 @@ export const DataContext = createContext({
     updateLog: () => {},
     err: false,
     updateErr: () => {},
-    pc: 0,
 });
 
 export const DataContextProvider = ({ children }) => {
@@ -64,7 +63,11 @@ export const DataContextProvider = ({ children }) => {
 
     const [err, setErr] = useState(false);  // Initialize error state
 
-    const [pc, setPc] = useState(0);  // Initialize program counter state
+    const [pc, setPc] = useState(0);  // Initialize program counter
+
+    const updatePc = useCallback((data) => {
+        setPc(data);
+    }, []);
 
     // Update registers state
     const updateRegs = useCallback((data) => {
@@ -86,9 +89,6 @@ export const DataContextProvider = ({ children }) => {
         setErr(data);
     }, []);
 
-    const updatePc = useCallback((data) => {
-        setPc(data);
-    }, []);
 
     const defaultInitialise = () =>{
         setRegs({
@@ -126,11 +126,10 @@ export const DataContextProvider = ({ children }) => {
             "x31": "0x0",
         });
         setMem(initialMemory);
-        setPc(0);
     }
 
     return (
-        <DataContext.Provider value={{ err, regs, mem, log,pc ,updateLog,updateMem, updateRegs, defaultInitialise, updateErr, updatePc }}>
+        <DataContext.Provider value={{ err, regs, mem, log, pc, updateLog,updateMem, updateRegs, defaultInitialise, updateErr, updatePc }}>
             {children}
         </DataContext.Provider>
     );

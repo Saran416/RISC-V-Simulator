@@ -5,9 +5,7 @@ import { DataContext } from '../context/DataContext.jsx'
 
 const Registers = () => {
     const { regs } = useContext(DataContext);  // Get registers from context
-    useEffect(() => {
-        console.log(regs);
-    })
+    
     return (
         <div className='registers'>
             <div className='table'>
