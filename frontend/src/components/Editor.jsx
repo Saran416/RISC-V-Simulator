@@ -5,6 +5,7 @@ import { DataContext } from '../context/DataContext.jsx';
 import runIcon from '../assets/run.svg';
 import stepIcon from '../assets/step.svg';
 import restartIcon from '../assets/restart.svg';
+import uploadIcon from '../assets/upload.svg';
 import { EditorView, Decoration, ViewPlugin } from '@codemirror/view';
 import './Editor.css';
 
@@ -15,7 +16,6 @@ const Editor = () => {
     let number = 2;
     const { updateRegs, updateMem, defaultInitialise, log, updateLog, err, updateErr, pc, updatePc } = useContext(DataContext);
     const [highlightedLine, setHighlightedLine] = useState(1);
-
 
     useEffect(() => {
         if (code !== defaultText) {
@@ -30,29 +30,23 @@ const Editor = () => {
         }
     }, []);
 
-
     const findTextLine = () => {
-        const lines = code.split('\n'); // Split the code into lines
+        const lines = code.split('\n');
         number = lines.length;
-        console.log("Number of line" + number);
         for (let i = 0; i < lines.length; i++) {
             if (lines[i].includes('.text')) {
-                console.log("found" + (i + 1))
                 return i + 1; // Return the 1-indexed line number
             }
         }
-        return 1; // Return null if ".text" is not found
+        return 1;
     };
 
     useEffect(() => {
         offset = findTextLine();
-        console.log(offset);
-        // Update the highlighted line whenever `pc` changes
         const newLineNumber = (pc / 4) + 1 + offset; // Assuming 4 bytes per line
         setHighlightedLine(newLineNumber);
     }, [pc, code]);
 
-    // Line highlighting plugin
     const lineHighlightPlugin = ViewPlugin.fromClass(
         class {
             constructor(view) {
@@ -67,7 +61,6 @@ const Editor = () => {
 
             createHighlight(view, lineNumber) {
                 const line = view.state.doc.line(lineNumber);
-                console.log('Highlighting line:', line);
                 return Decoration.set([
                     Decoration.line({ attributes: { class: 'highlight-line' } }).range(line.from),
                 ]);
@@ -92,9 +85,7 @@ const Editor = () => {
                 throw new Error('Failed to fetch data');
             }
 
-            const { registers, memory, statuslog } = await response.json();
-            // console.log(statuslog);
-
+            const { registers, memory, statuslog, gpc } = await response.json();
             if (statuslog[0] === 'E' || statuslog[0] === 'C') {
                 updateLog(statuslog);
                 updateErr(false);
@@ -129,13 +120,11 @@ const Editor = () => {
                 throw new Error('Failed to fetch data');
             }
 
-            const { registers, memory, statuslog } = await response.json();
-            // console.log(statuslog);
-
+            const { registers, memory, statuslog, gpc } = await response.json();
             if (statuslog[0] === 'E' || statuslog[0] === 'C') {
                 updateLog(statuslog);
                 updateErr(false);
-                updatePc(pc + 4);
+                updatePc(gpc);
             } else if (statuslog === '') {
                 updateLog('Nothing to step');
                 updateErr(true);
@@ -163,9 +152,40 @@ const Editor = () => {
         updatePc(0);
     };
 
+    const handleFileUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            if (file.name.endsWith('.s')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    setCode(e.target.result);
+                    updateLog(`File ${file.name} uploaded successfully`);
+                    updateErr(false);
+                };
+                reader.readAsText(file);
+            } else {
+                updateLog('Upload Error: Only .s files are supported');
+                updateErr(true);
+            }
+        }
+    };
+
     return (
         <div className="code-area">
             <div className="toolbar">
+                <div className="file-upload">
+                    <label htmlFor="file-upload" className="upload-label">
+                        <img src={uploadIcon} alt="upload" className="upload-icon" />
+                    </label>
+                    <input
+                        id="file-upload"
+                        type="file"
+                        accept=".s, .txt"
+                        onChange={handleFileUpload}
+                        style={{ display: 'none' }}
+                    />
+                </div>
+
                 <div className="toolbar-buttons">
                     <button className="run" onClick={runCode}>
                         <img src={runIcon} alt="Run" className="icon" />
@@ -177,10 +197,12 @@ const Editor = () => {
                         <img src={restartIcon} alt="Restart" className="icon" />
                     </button>
                 </div>
+
                 <div className="toolbar-log">
                     {err ? <div className="error">{log}</div> : <div className="log">{log}</div>}
                 </div>
             </div>
+            
             <div className="editor">
                 <CodeMirror
                     value={code}

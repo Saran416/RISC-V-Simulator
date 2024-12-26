@@ -7,15 +7,7 @@ import './Home.css'
 
 
 const Home = () => {
-  // const { updateData } = useContext(DataContext);
-
-  // const getData = async () => {
-  //   const response = await fetch('http://localhost:5000/data');
-  //   const data = await response.json();
-  //   console.log(data);
-  //   updateData(data);
-  // }
-
+  console.log("test");
   // const runFile = async () => {
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= 1330);
 

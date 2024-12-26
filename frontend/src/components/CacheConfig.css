@@ -1,0 +1,59 @@
+.cache-config-container {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    padding: 20px;
+    border: 1px solid #fff;
+    border-radius: 8px;
+    background-color: #282a36;
+  }
+  
+  h2 {
+    text-align: center;
+    color: #fff;
+  }
+  
+  .cache-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .cache-settings {
+    margin-bottom: 20px;
+  }
+  
+  .dropdown {
+    margin-bottom: 15px;
+  }
+  
+  label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #fff;
+    border-radius: 4px;
+  }
+  
+  .cache-stats {
+    background-color: #282a36;
+    padding: 15px;
+    border: 1px solid #fff;
+    border-radius: 4px;
+  }
+  
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  
+  .stat-item label {
+    font-weight: bold;
+  }
+  
