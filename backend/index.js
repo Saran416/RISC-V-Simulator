@@ -10,7 +10,7 @@ app.use(express.json());
 app.post('/getData', async (req, res) => {
     const { code, arg, pc } = req.body;
     let gpc = pc;
-    console.log('Received code:', code);
+    // console.log('Received code:', code);
     console.log('Received arg:', arg);
     console.log('Received pc:', gpc);
 
@@ -90,6 +90,47 @@ app.get('/setzero', async (req, res) => {
     gpc = 0;
     res.json({ success: true, message: 'PC set to zero' });
 });
+
+
+app.post("/hexInstructions", async (req, res) => {
+    const { code } = req.body;
+    console.log('Received code:', code);
+
+    try {
+        // Asynchronously write the code to the file
+        await fs.writeFile('./Simulator/input.s', code);
+        console.log('File written successfully');
+
+        const simProcess = spawn('./riscv_asm', { cwd: './Simulator' });
+        console.log(`./riscv_asm`);
+
+        let dataOutput = "";
+
+        simProcess.stdout.on('data', (data) => {
+            dataOutput += data;
+        });
+
+        // Wait for the simulation process to close and handle the output
+        simProcess.on('close', () => {
+            const lines = dataOutput.split('\n');
+            let hexInstructions = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                hexInstructions.push(lines[i]);
+            }
+            res.json({ success: true, hexInstructions: hexInstructions });
+        });
+
+        simProcess.on('error', (error) => {
+            console.error('Error executing simulator', error);
+            res.status(500).json({ success: false, message: 'Simulator execution failed' });
+        });
+
+    } catch (err) {
+        console.error('Error writing to file', err);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+})
 
 // when running on VM
 // app.listen(3000, '192.168.51.120', () => {

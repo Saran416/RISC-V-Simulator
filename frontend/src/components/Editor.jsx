@@ -12,15 +12,40 @@ import './Editor.css';
 const Editor = () => {
     const defaultText = `.data\n.text`;
     const [code, setCode] = useState(defaultText);
+    const [hex, setHex] = useState('1\n2\n3\n4\n5');
     let offset = 0;
     let number = 2;
     const { updateRegs, updateMem, defaultInitialise, log, updateLog, err, updateErr, pc, updatePc } = useContext(DataContext);
     const [highlightedLine, setHighlightedLine] = useState(1);
 
+    const getHex = async () => {
+        try{
+            const response = await fetch('http://localhost:3000/hexInstructions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ code: code}),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch data');
+            }
+            const { hexInstructions } = await response.json();
+            setHex(hexInstructions.join('\n'));
+        }
+        catch (error) {
+            updateErr(true);
+            updateLog(error.message);
+            console.error('Error running code:', error);
+        }
+    }
+
     useEffect(() => {
         if (code !== defaultText) {
             localStorage.setItem('curr_code', code);
         }
+        getHex();
     }, [code]);
 
     useEffect(() => {
@@ -208,6 +233,13 @@ const Editor = () => {
                     value={code}
                     extensions={[dracula, lineHighlightPlugin]}
                     onChange={(data) => setCode(data)}
+                />
+                <CodeMirror
+                    value={hex}
+                    extensions={[dracula, lineHighlightPlugin]}
+                    className='hexes'
+                    editable={false}
+                    basicSetup={{ lineNumbers: false }}
                 />
             </div>
         </div>
