@@ -130,7 +130,7 @@ const Editor = () => {
             console.error('Error running code:', error);
         }
     };
-
+    
     const stepCode = async () => {
         try {
             const response = await fetch('http://localhost:3000/getData', {
