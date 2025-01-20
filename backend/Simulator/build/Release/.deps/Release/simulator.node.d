@@ -1,0 +1,1 @@
+cmd_Release/simulator.node := c++ -bundle -stdlib=libc++ -undefined dynamic_lookup -Wl,-search_paths_first -mmacosx-version-min=10.7 -arch arm64 -L./Release -stdlib=libc++  -o Release/simulator.node Release/obj.target/simulator/app.o 

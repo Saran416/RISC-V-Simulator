@@ -19,7 +19,7 @@ io.on('connection', (socket) => {
     socket.on('getData', async ({ code, arg, pc }) => {
         console.log('Received arg:', arg);
         console.log('Received pc:', pc);
-
+        
         let gpc = pc;
 
         try {
@@ -55,6 +55,8 @@ io.on('connection', (socket) => {
                 let isRegisters = true;
                 let registerCount = 0;
                 let memCount = 0;
+                let hits = 0;
+                let misses = 0;
 
                 statuslog = lines[0];
                 console.log(`Printing log: ${statuslog}`);
@@ -66,7 +68,10 @@ io.on('connection', (socket) => {
                         success: true,
                         registers: { "x1": 0 },
                         memory: { "0x10000": 0 },
-                        statuslog: statuslog
+                        statuslog: statuslog,
+                        gpc: gpc,
+                        hits : hits,
+                        misses : misses
                     });
                 } else {
                     for (let i = 1; i < lines.length; i++) {
@@ -78,22 +83,30 @@ io.on('connection', (socket) => {
                         if (isRegisters) {
                             registers[`x${registerCount}`] = lines[i];
                             registerCount++;
-                        } else {
+                        } else if(memCount<=1024) {
                             const address = `0x${(0x10000 + memCount).toString(16)}`;
                             memory[address] = lines[i]; // Map address to value
                             memCount++;
                         }
+                        else{
+                            hits = lines[i];
+                            misses = lines[i+1];
+                            break;
+                        }
                     }
+                    console.log("emitting response");
                     socket.emit('response', {
                         success: true,
                         registers: registers,
                         memory: memory,
                         statuslog: statuslog,
-                        gpc: gpc
+                        gpc: gpc,
+                        hits: hits,
+                        misses: misses
                     });
                 }
             });
-
+            
             simProcess.on('error', (error) => {
                 console.error('Error executing simulator', error);
                 socket.emit('error', { success: false, message: 'Simulator execution failed' });
