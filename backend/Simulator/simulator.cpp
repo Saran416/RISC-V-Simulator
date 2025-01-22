@@ -1087,10 +1087,10 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
 
                     newCache->hits++;
 
-                    ofstream file(outputFile, ios::app);
-
-                    file << "R: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", " << (i->dirty ? "Dirty" : "Clean") << endl;
-                    file.close();
+                    // ofstream file(outputFile, ios::app);
+                    
+                    // file << "R: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", " << (i->dirty ? "Dirty" : "Clean") << endl;
+                    // file.close();
 
                     // updated the timer of access of the block
                     if (newCache->replacement_policy == "LRU")
@@ -1111,7 +1111,7 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
                     {
                         extracted_num = extracted_num + (i->data[stoi(offtag, 0, 2) + k] << (k * 8));
                     }
-                    cout << extracted_num << endl;
+                    //cout << extracted_num << endl;
                     if (sign_extension)
                     {
                         if (size == 1 && (extracted_num & 0x80))
@@ -1145,7 +1145,7 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
                     break;
                 }
             }
-            cout << "Found Empty Block: " << emptyBlock << endl;
+            //cout << "Found Empty Block: " << emptyBlock << endl;
 
             // if empty block not found
             if (emptyBlock == -1)
@@ -1177,14 +1177,14 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
                     }
                 }
             }
-            cout << "Found Empty Block 1: " << emptyBlock << endl;
+            //cout << "Found Empty Block 1: " << emptyBlock << endl;
             // updating memory if the block is dirty
             if (newCache->table[idx][emptyBlock]->valid && newCache->table[idx][emptyBlock]->dirty)
             {
-                cout << "Chosen block was Dirty" << endl;
+                //cout << "Chosen block was Dirty" << endl;
                 string offTagZeroes(offtag.length(), '0'); // number of bytes in a block
                 unsigned long currBaseAddress = stoul(newCache->table[idx][emptyBlock]->tag + index + offTagZeroes, 0, 2);
-                cout << "Current Base Address: " << hex << "0x" << currBaseAddress << endl;
+                //cout << "Current Base Address: " << hex << "0x" << currBaseAddress << endl;
                 for (int k = 0; k < newCache->block_size; k++)
                 {
                     memory[currBaseAddress + k] = newCache->table[idx][emptyBlock]->data[k];
@@ -1209,12 +1209,12 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
             {
                 if (i->tag == tag && i->valid)
                 {
-                    cout << "mil gaya" << endl;
-                    string outputFile = fileName + ".output";
-                    ofstream file(outputFile, ios::app);
-
-                    file << "R: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Miss, Tag: 0x" << stoul(tag, 0, 2) << ", Clean" << endl;
-                    file.close();
+                    //cout << "mil gaya" << endl;
+                    // string outputFile = fileName + ".output";
+                    // ofstream file(outputFile, ios::app);
+                    
+                    // file << "R: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Miss, Tag: 0x" << stoul(tag, 0, 2) << ", Clean" << endl;
+                    // file.close();
 
                     if (rd == 0)
                     {
@@ -1228,7 +1228,7 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
                     {
                         extracted_num = extracted_num + (i->data[stoi(offtag, 0, 2) + k] << (k * 8));
                     }
-                    cout << "Extracted num: " << extracted_num << endl;
+                    // cout << "Extracted num: " << extracted_num << endl;
                     // extending sign
                     if (sign_extension)
                     {
@@ -1318,9 +1318,9 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
             int tagsize = 20 - offset - indexSize;
             string offtag = binAddress.substr(indexSize + tagsize, offset);
             string tag = binAddress.substr(0, tagsize);
-            cout << "Tag: " << tag << endl;
+            //cout << "Tag: " << tag << endl;
             string index = binAddress.substr(tagsize, indexSize);
-            cout << "stoi test" << endl;
+            //cout << "stoi test" << endl;
             int idx;
             if (index == "")
             {
@@ -1343,18 +1343,18 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
             {
                 if (i->tag == tag && i->valid)
                 {
-                    cout << "found" << endl;
+                    //cout << "found" << endl;
                     newCache->hits++;
-                    string outputFile = fileName + ".output";
-                    ofstream file(outputFile, ios::app);
+                    //string outputFile = fileName + ".output";
+                    //ofstream file(outputFile, ios::app);
 
                     if (newCache->write_back_policy == "WB")
                     {
-                        file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", Dirty" << endl;
+                        //file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", Dirty" << endl;
                     }
                     else if (newCache->write_back_policy == "WT")
                     {
-                        file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", Clean" << endl;
+                        //file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", Clean" << endl;
 
                         // write through replaces the value in memory at the same timer
                         for (unsigned long k = 0; k < size; k++)
@@ -1363,7 +1363,7 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
                         }
                     }
 
-                    file.close();
+                    //file.close();
                     if (newCache->replacement_policy == "LRU")
                     {
                         timer++;
@@ -1383,7 +1383,7 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
                 }
             }
 
-            cout << "not found" << endl;
+            //cout << "not found" << endl;
 
             newCache->misses++;
 
@@ -1449,7 +1449,7 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
                 }
 
                 newCache->table[idx][emptyBlock]->tag = tag;
-                cout << "empty block " << emptyBlock << endl;
+                //cout << "empty block " << emptyBlock << endl;
                 newCache->table[idx][emptyBlock]->valid = true;
                 newCache->table[idx][emptyBlock]->dirty = true;
 
@@ -1464,11 +1464,11 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
                     if (i->tag == tag && i->valid)
                     {
                         string outputFile = fileName + ".output";
-                        ofstream file(outputFile, ios::app);
+                        // ofstream file(outputFile, ios::app);
 
-                        file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", Dirty" << endl;
+                        // file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", Dirty" << endl;
 
-                        file.close();
+                        // file.close();
 
                         // put the value from the register to the cache
                         for (int k = 0; k < size; k++)
@@ -1481,9 +1481,9 @@ pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache
             else if (newCache->write_back_policy == "WT") // follow no write allocate policy if write through
             {
 
-                string outputFile = fileName + ".output";
-                ofstream file(outputFile, ios::app);
-                file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Miss, Tag 0x" << stoul(tag, 0, 2) << ", Clean" << endl;
+                // string outputFile = fileName + ".output";
+                // ofstream file(outputFile, ios::app);
+                // file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Miss, Tag 0x" << stoul(tag, 0, 2) << ", Clean" << endl;
                 for (unsigned long k = 0; k < size; k++)
                 {
                     memory[address + k] = (num >> (k * 8)) & 0xff; // little endian format
@@ -1814,6 +1814,7 @@ void run(bool toPrint,bool cacheEnabled, cache* newCache)
         printRegs();
         cout << endl;
         printMem(0x10000, 1);
+        printCacheRes(newCache);
     }
 
     while (!st.empty())

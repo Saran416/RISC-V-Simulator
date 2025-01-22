@@ -53,3 +53,5 @@ void removeBreakpoint(int lineNumber);
 void showStack();
 
 void printCacheRes(cache *newCache);
+
+void changeCacheConfigFile(string file);
