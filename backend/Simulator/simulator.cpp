@@ -31,6 +31,9 @@ unordered_map<string, int> label; // stores all the labels and their correspondi
 bool funcCall = false;            // stores whether a function call is made or not and is changed after use
 bool funcReturn = false;          // stores whether a function return is made or not and is changed after use
 int memLines = 0;                 // number of lines for .data section (includes one line for .text )
+string fileName = "";
+
+int timer = 0;
 
 void setPc(int pc)
 {
@@ -176,11 +179,6 @@ pair<bool, int> loadFile(string inputFile)
     int pc = 0;
     int dataLines = 0;
     ifstream file(inputFile);
-    if (!file.is_open())
-    {
-        cout << "File not found" << endl;
-        return make_pair(false, 0);
-    }
     string line;
     bool isTextSection = true;
     while (getline(file, line))
@@ -805,7 +803,7 @@ string addZeroes(string hex, int num)
 /*
     Performs tasks, manipulate the memory and register for the given instruction line
 */
-pair<int, bool> convert(string line, int pc, bool step)
+pair<int, bool> convert(string line, int pc, bool step, bool cacheEnabled, cache *newCache)
 {
     bool flag = false;
     int lineNum = pc / 4 + 1 + memLines;
@@ -833,7 +831,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         i++;
     }
 
-    for (; i < line.length(); i++) // extracting instruction and arguments
+    for (i; i < line.length(); i++) // extracting instruction and arguments
     {
         if (line[i] == ':' || line[i] == ' ' || line[i] == ',')
         {
@@ -858,19 +856,19 @@ pair<int, bool> convert(string line, int pc, bool step)
     }
     if (instr == "")
     {
-        cout << "Line " << lineNum << ": Invalid Instruction" << endl;
+        cout << "Line " << (pc / 4 + 1) << ": Invalid Instruction" << endl;
         return make_pair(-1, flag);
     }
     if (opcode.find(instr) == opcode.end())
     {
-        cout << "Line " << lineNum << ": Instruction " << instr << " not found" << endl;
+        cout << "Line " << (pc / 4 + 1) << ": Instruction " << instr << " not found" << endl;
         return make_pair(-1, flag);
     }
     if (opcode[instr] == "0110011") // R type instructions and,xor,or,add,sub,sll,srl,sra,slt,sltu
     {
         vector<string> arguments;
         bool err;
-        pair<vector<string>, bool> res = getArguments(lineNum, 3, args, false);
+        pair<vector<string>, bool> res = getArguments(pc / 4 + 1, 3, args, false);
         err = res.second;
         arguments = res.first;
         if (err)
@@ -878,15 +876,15 @@ pair<int, bool> convert(string line, int pc, bool step)
             return make_pair(-1, flag);
         }
         int rd, rs1, rs2;
-        rd = getRegister(arguments[0], alias, lineNum);
-        rs1 = getRegister(arguments[1], alias, lineNum);
-        rs2 = getRegister(arguments[2], alias, lineNum);
+        rd = getRegister(arguments[0], alias, pc / 4 + 1);
+        rs1 = getRegister(arguments[1], alias, pc / 4 + 1);
+        rs2 = getRegister(arguments[2], alias, pc / 4 + 1);
         if (rd == -1 || rs1 == -1 || rs2 == -1)
         {
             return make_pair(-1, flag);
         }
 
-        if (checkRegister(rd, lineNum) || checkRegister(rs1, lineNum) || checkRegister(rs2, lineNum))
+        if (checkRegister(rd, pc / 4 + 1) || checkRegister(rs1, pc / 4 + 1) || checkRegister(rs2, pc / 4 + 1))
         {
             return make_pair(-1, flag);
         }
@@ -904,13 +902,13 @@ pair<int, bool> convert(string line, int pc, bool step)
         int prev = -1;
         int rd, rs1;
         int imm;
-        arguments = getArguments(lineNum, 3, args, false).first;
-        rd = getRegister(arguments[0], alias, lineNum);
-        rs1 = getRegister(arguments[1], alias, lineNum);
+        arguments = getArguments(pc / 4 + 1, 3, args, false).first;
+        rd = getRegister(arguments[0], alias, pc / 4 + 1);
+        rs1 = getRegister(arguments[1], alias, pc / 4 + 1);
         if (rd == -1 || rs1 == -1)
             return make_pair(-1, flag);
 
-        if (checkRegister(rd, lineNum) || checkRegister(rs1, lineNum))
+        if (checkRegister(rd, pc / 4 + 1) || checkRegister(rs1, pc / 4 + 1))
         {
             return make_pair(-1, flag);
         }
@@ -921,7 +919,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         imm = res.first;
         if (imm > 2047 || imm < -2048)
         {
-            cout << "Line " << lineNum << ": Value cannot be stored in 12 bits" << endl;
+            cout << "Line " << (pc / 4 + 1) << ": Value cannot be stored in 12 bits" << endl;
             return make_pair(-1, flag);
         }
 
@@ -929,16 +927,16 @@ pair<int, bool> convert(string line, int pc, bool step)
         {
             if (imm > 63 || imm < 0)
             {
-                cout << "Line " << lineNum << ": Cannot shift by " << imm << " bits" << endl;
+                cout << "Line " << (pc / 4 + 1) << ": Cannot shift by " << imm << " bits" << endl;
                 return make_pair(-1, flag);
             }
         }
         if (instr == "srai") // special case of srai where the 6 MSB bits are always having value 16
         {
-            pair<int, bool> res = hexToInt("0x10", lineNum);
+            pair<int, bool> res = hexToInt("0x10", pc / 4 + 1);
             if (res.second)
             {
-                cout << "Line " << lineNum << ": Invalid immediate" << endl;
+                cout << "Line " << (pc / 4 + 1) << ": Invalid immediate" << endl;
                 return make_pair(-1, flag);
             }
 
@@ -954,20 +952,20 @@ pair<int, bool> convert(string line, int pc, bool step)
         }
         registers[rd] = ALU(registers[rs1], imm, instr);
     }
-    else if (opcode[instr] == "0000011" || opcode[instr] == "1100111") // I Load type ld lh lw ....
+    else if (opcode[instr] == "0000011" || opcode[instr] == "1100111") // Load type ld lh lw ....
     {
         vector<string> arguments;
         int count = 0;
         int index = 0;
         int prev = -1;
-        arguments = getArguments(lineNum, 3, args, true).first;
+        arguments = getArguments(pc / 4 + 1, 3, args, true).first;
         int rd, rs1, imm;
-        rd = getRegister(arguments[0], alias, lineNum);
-        rs1 = getRegister(arguments[2], alias, lineNum);
+        rd = getRegister(arguments[0], alias, pc / 4 + 1);
+        rs1 = getRegister(arguments[2], alias, pc / 4 + 1);
         if (rd == -1 || rs1 == -1)
             return make_pair(-1, flag);
 
-        if (checkRegister(rd, lineNum) || checkRegister(rs1, lineNum))
+        if (checkRegister(rd, pc / 4 + 1) || checkRegister(rs1, pc / 4 + 1))
         {
             return make_pair(-1, flag);
         }
@@ -976,7 +974,7 @@ pair<int, bool> convert(string line, int pc, bool step)
 
         if (imm > 2047 || imm < -2048)
         {
-            cout << "Line: " << lineNum << " Value cannot be stored in 12 bits" << endl;
+            cout << "Line: " << (pc / 4 + 1) << " Value cannot be stored in 12 bits" << endl;
             return make_pair(-1, flag);
         }
 
@@ -994,7 +992,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         unsigned long address = registers[rs1] + imm;
         if (address > memsize)
         {
-            cout << "Line: " << lineNum << " Memory address out of bounds" << endl;
+            cout << "Line: " << (pc / 4 + 1) << " Memory address out of bounds" << endl;
             return make_pair(-1, flag);
         }
 
@@ -1023,31 +1021,236 @@ pair<int, bool> convert(string line, int pc, bool step)
                 sign_extension = true;
             size = 1;
         }
-        for (int i = 0; i < size; i++)
+        if (!cacheEnabled)
         {
-            extracted_num = extracted_num + ((unsigned long)memory[address + i] << (i * 8));
-        }
-        if (sign_extension)
-        {
-            if (size == 1 && (extracted_num & 0x80))
+            for (int i = 0; i < size; i++)
             {
-                extracted_num = extracted_num | 0xffffffffffffff00;
+                extracted_num = extracted_num + (memory[address + i] << (i * 8));
             }
-            else if (size == 2 && (extracted_num & 0x8000))
+            if (sign_extension)
             {
-                extracted_num = extracted_num | 0xffffffffffff0000;
+                if (size == 1 && (extracted_num & 0x80))
+                {
+                    extracted_num = extracted_num | 0xffffffffffffff00;
+                }
+                else if (size == 2 && (extracted_num & 0x8000))
+                {
+                    extracted_num = extracted_num | 0xffffffffffff0000;
+                }
+                else if (size == 4 && (extracted_num & 0x80000000))
+                {
+                    extracted_num = extracted_num | 0xffffffff00000000;
+                }
             }
-            else if (size == 4 && (extracted_num & 0x80000000))
+            if (rd == 0)
             {
-                extracted_num = extracted_num | 0xffffffff00000000;
+                return make_pair(0, flag);
             }
-        }
-        if (rd == 0)
-        {
+            registers[rd] = extracted_num;
             return make_pair(0, flag);
         }
-        registers[rd] = extracted_num;
-        return make_pair(0, flag);
+        else
+        {
+            string binAddress = bitset<20>(address).to_string();
+            // extracting the sizes of the fields
+            int indexSize = (int)log2(newCache->cache_size / (newCache->block_size * newCache->associativity));
+            int offset = (int)log2(newCache->block_size);
+            int tagsize = 20 - offset - indexSize;
+            // extracting the tag, index and offset from the address
+            string tag = binAddress.substr(0, tagsize);
+            string index = binAddress.substr(tagsize, indexSize);
+            string offtag = binAddress.substr(indexSize + tagsize, offset);
+            int idx;
+            if (index == "")
+            {
+                idx = 0;
+            }
+            else
+            {
+                idx = stoi(index, 0, 2);
+            }
+
+            // make offset bits zero to get the base address of the block
+            unsigned long baseaddress = (unsigned long)address >> offset;
+            baseaddress = baseaddress << offset;
+            if (address + size > newCache->block_size + baseaddress)
+            {
+                cout << "Unaligned Memory Access" << endl;
+                return make_pair(-1, flag);
+            }
+
+            for (auto i : newCache->table[idx])
+            {
+                if (i->tag == tag && i->valid)
+                {
+                    string outputFile = fileName + ".output";
+
+                    newCache->hits++;
+
+                    // ofstream file(outputFile, ios::app);
+                    
+                    // file << "R: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", " << (i->dirty ? "Dirty" : "Clean") << endl;
+                    // file.close();
+
+                    // updated the timer of access of the block
+                    if (newCache->replacement_policy == "LRU")
+                    {
+                        timer++;
+                        i->toa = timer;
+                    }
+
+                    if (rd == 0)
+                    {
+                        return make_pair(0, flag);
+                    }
+
+                    // extracting value from the block
+                    unsigned long extracted_num = 0;
+
+                    for (int k = 0; k < size; k++)
+                    {
+                        extracted_num = extracted_num + (i->data[stoi(offtag, 0, 2) + k] << (k * 8));
+                    }
+                    //cout << extracted_num << endl;
+                    if (sign_extension)
+                    {
+                        if (size == 1 && (extracted_num & 0x80))
+                        {
+                            extracted_num = extracted_num | 0xffffffffffffff00;
+                        }
+                        else if (size == 2 && (extracted_num & 0x8000))
+                        {
+                            extracted_num = extracted_num | 0xffffffffffff0000;
+                        }
+                        else if (size == 4 && (extracted_num & 0x80000000))
+                        {
+                            extracted_num = extracted_num | 0xffffffff00000000;
+                        }
+                    }
+                    registers[rd] = extracted_num;
+                    // registers[rd] = i->data[stoi(offtag, 0, 2)];
+                    return make_pair(0, flag);
+                }
+            }
+
+            newCache->misses++;
+
+            // search for empty block
+            int emptyBlock = -1;
+            for (int i = 0; i < newCache->associativity; i++)
+            {
+                if (!newCache->table[idx][i]->valid)
+                {
+                    emptyBlock = i;
+                    break;
+                }
+            }
+            //cout << "Found Empty Block: " << emptyBlock << endl;
+
+            // if empty block not found
+            if (emptyBlock == -1)
+            {
+                if (newCache->replacement_policy == "RANDOM")
+                {
+                    emptyBlock = rand() % newCache->associativity;
+                }
+
+                else if (newCache->replacement_policy == "LRU" || newCache->replacement_policy == "FIFO")
+                {
+                    int min = INT_MAX;
+                    for (auto i : newCache->table[idx])
+                    {
+                        if (i->toa < min)
+                        {
+                            min = i->toa;
+                        }
+                    }
+                    int it = 0;
+                    for (auto i : newCache->table[idx])
+                    {
+                        if (i->toa == min)
+                        {
+                            emptyBlock = it;
+                            break;
+                        }
+                        it++;
+                    }
+                }
+            }
+            //cout << "Found Empty Block 1: " << emptyBlock << endl;
+            // updating memory if the block is dirty
+            if (newCache->table[idx][emptyBlock]->valid && newCache->table[idx][emptyBlock]->dirty)
+            {
+                //cout << "Chosen block was Dirty" << endl;
+                string offTagZeroes(offtag.length(), '0'); // number of bytes in a block
+                unsigned long currBaseAddress = stoul(newCache->table[idx][emptyBlock]->tag + index + offTagZeroes, 0, 2);
+                //cout << "Current Base Address: " << hex << "0x" << currBaseAddress << endl;
+                for (int k = 0; k < newCache->block_size; k++)
+                {
+                    memory[currBaseAddress + k] = newCache->table[idx][emptyBlock]->data[k];
+                }
+            }
+
+            for (int k = 0; k < newCache->block_size; k++)
+            {
+                newCache->table[idx][emptyBlock]->data[k] = memory[baseaddress + k];
+            }
+
+            newCache->table[idx][emptyBlock]->tag = tag;
+            newCache->table[idx][emptyBlock]->valid = true;
+
+            if (newCache->replacement_policy == "FIFO" || newCache->replacement_policy == "LRU")
+            {
+                timer++;
+                newCache->table[idx][emptyBlock]->toa = timer;
+            }
+
+            for (auto i : newCache->table[idx])
+            {
+                if (i->tag == tag && i->valid)
+                {
+                    //cout << "mil gaya" << endl;
+                    // string outputFile = fileName + ".output";
+                    // ofstream file(outputFile, ios::app);
+                    
+                    // file << "R: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Miss, Tag: 0x" << stoul(tag, 0, 2) << ", Clean" << endl;
+                    // file.close();
+
+                    if (rd == 0)
+                    {
+                        return make_pair(0, flag);
+                    }
+
+                    // extracting value from the block
+                    unsigned long extracted_num = 0;
+
+                    for (int k = 0; k < size; k++)
+                    {
+                        extracted_num = extracted_num + (i->data[stoi(offtag, 0, 2) + k] << (k * 8));
+                    }
+                    // cout << "Extracted num: " << extracted_num << endl;
+                    // extending sign
+                    if (sign_extension)
+                    {
+                        if (size == 1 && (extracted_num & 0x80))
+                        {
+                            extracted_num = extracted_num | 0xffffffffffffff00;
+                        }
+                        else if (size == 2 && (extracted_num & 0x8000))
+                        {
+                            extracted_num = extracted_num | 0xffffffffffff0000;
+                        }
+                        else if (size == 4 && (extracted_num & 0x80000000))
+                        {
+                            extracted_num = extracted_num | 0xffffffff00000000;
+                        }
+                    }
+                    registers[rd] = extracted_num;
+                    // registers[rd] = i->data[stoi(offtag, 0, 2)];
+                    return make_pair(0, flag);
+                }
+            }
+        }
     }
     else if (opcode[instr] == "0100011") // S type
     {
@@ -1055,15 +1258,15 @@ pair<int, bool> convert(string line, int pc, bool step)
         int count = 0;
         int index = 0;
         int prev = -1;
-        arguments = getArguments(lineNum, 3, args, true).first;
+        arguments = getArguments(pc / 4 + 1, 3, args, true).first;
         int rs2, rs1, imm;
 
-        rs2 = getRegister(arguments[0], alias, lineNum);
-        rs1 = getRegister(arguments[2], alias, lineNum);
+        rs2 = getRegister(arguments[0], alias, pc / 4 + 1);
+        rs1 = getRegister(arguments[2], alias, pc / 4 + 1);
         if (rs2 == -1 || rs1 == -1)
             return make_pair(-1, flag);
 
-        if (checkRegister(rs2, lineNum) || checkRegister(rs1, lineNum))
+        if (checkRegister(rs2, pc / 4 + 1) || checkRegister(rs1, pc / 4 + 1))
         {
             return make_pair(-1, flag);
         }
@@ -1071,7 +1274,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         imm = res.first;
         if (imm > 2047 || imm < -2048)
         {
-            cout << "Line: " << lineNum << ": Value cannot be stored in 12 bits" << endl;
+            cout << "Line: " << (pc / 4 + 1) << ": Value cannot be stored in 12 bits" << endl;
             return make_pair(-1, flag);
         }
         long num = registers[rs2];
@@ -1095,30 +1298,215 @@ pair<int, bool> convert(string line, int pc, bool step)
         unsigned long address = registers[rs1] + imm;
         if (address < 0x10000)
         {
-            cout << "Line: " << lineNum << ": Segmentation Fault" << endl;
+            cout << "Line: " << (pc / 4 + 1) << ": Segmentation Fault" << endl;
             return make_pair(-1, flag);
         }
-        for (unsigned long i = 0; i < size; ++i)
+
+        if (!cacheEnabled)
         {
-            memory[i + address] = (num >> (i * 8)) & 0xff; // little endian format
+            for (unsigned long i = 0; i < size; ++i)
+            {
+                memory[i + address] = (num >> (i * 8)) & 0xff; // little endian format
+            }
+        }
+        else
+        {
+            string binAddress = bitset<20>(address).to_string();
+
+            int indexSize = (int)log2(newCache->cache_size / (newCache->block_size * newCache->associativity));
+            int offset = (int)log2(newCache->block_size);
+            int tagsize = 20 - offset - indexSize;
+            string offtag = binAddress.substr(indexSize + tagsize, offset);
+            string tag = binAddress.substr(0, tagsize);
+            //cout << "Tag: " << tag << endl;
+            string index = binAddress.substr(tagsize, indexSize);
+            //cout << "stoi test" << endl;
+            int idx;
+            if (index == "")
+            {
+                idx = 0;
+            }
+            else
+            {
+                idx = stoi(index, 0, 2);
+            }
+
+            unsigned long baseaddress = (unsigned long)address >> offset;
+            baseaddress = baseaddress << offset;
+            if (address + size > newCache->block_size + baseaddress)
+            {
+                cout << "Unaligned Memory Access" << endl;
+                return make_pair(-1, flag);
+            }
+
+            for (auto i : newCache->table[idx])
+            {
+                if (i->tag == tag && i->valid)
+                {
+                    //cout << "found" << endl;
+                    newCache->hits++;
+                    //string outputFile = fileName + ".output";
+                    //ofstream file(outputFile, ios::app);
+
+                    if (newCache->write_back_policy == "WB")
+                    {
+                        //file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", Dirty" << endl;
+                    }
+                    else if (newCache->write_back_policy == "WT")
+                    {
+                        //file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", Clean" << endl;
+
+                        // write through replaces the value in memory at the same timer
+                        for (unsigned long k = 0; k < size; k++)
+                        {
+                            memory[address + k] = (num >> (k * 8)) & 0xff; // little endian format
+                        }
+                    }
+
+                    //file.close();
+                    if (newCache->replacement_policy == "LRU")
+                    {
+                        timer++;
+                        i->toa = timer;
+                    }
+
+                    // change the value in the cache
+                    for (int k = 0; k < size; k++)
+                    {
+                        i->data[stoi(offtag, 0, 2) + k] = (num >> (k * 8)) & 0xff;
+                    }
+                    if (newCache->write_back_policy == "WB")
+                    {
+                        i->dirty = true;
+                    }
+                    return make_pair(0, flag);
+                }
+            }
+
+            //cout << "not found" << endl;
+
+            newCache->misses++;
+
+            // search for empty block
+            int emptyBlock = -1;
+            for (int i = 0; i < newCache->associativity; i++)
+            {
+                if (!newCache->table[idx][i]->valid)
+                {
+                    emptyBlock = i;
+                    break;
+                }
+            }
+
+            // if empty block not found
+            if (emptyBlock == -1)
+            {
+                if (newCache->replacement_policy == "RANDOM")
+                {
+                    emptyBlock = rand() % newCache->associativity;
+                }
+
+                else if (newCache->replacement_policy == "LRU" || newCache->replacement_policy == "FIFO")
+                {
+                    int min = INT_MAX;
+                    for (auto i : newCache->table[idx])
+                    {
+                        if (i->toa < min)
+                        {
+                            min = i->toa;
+                        }
+                    }
+                    int it = 0;
+                    for (auto i : newCache->table[idx])
+                    {
+                        if (i->toa == min)
+                        {
+                            emptyBlock = it;
+                            break;
+                        }
+                        it++;
+                    }
+                }
+            }
+
+            if (newCache->write_back_policy == "WB") // follow write allocate policy if write back
+            {
+                if (newCache->table[idx][emptyBlock]->valid && newCache->table[idx][emptyBlock]->dirty)
+                {
+                    string offTagZeroes(offtag.length(), '0'); // number of dwords in a block
+                    unsigned long currBaseAddress = stoul(newCache->table[idx][emptyBlock]->tag + index + offTagZeroes, 0, 2);
+                    for (int k = 0; k < newCache->block_size; k++)
+                    {
+                        memory[currBaseAddress + k] = newCache->table[idx][emptyBlock]->data[k];
+                    }
+                }
+
+                unsigned long baseaddress = (unsigned long)address >> (offset);
+                baseaddress = baseaddress << (offset);
+                for (int k = 0; k < newCache->block_size; k++)
+                {
+                    newCache->table[idx][emptyBlock]->data[k] = memory[baseaddress + k];
+                }
+
+                newCache->table[idx][emptyBlock]->tag = tag;
+                //cout << "empty block " << emptyBlock << endl;
+                newCache->table[idx][emptyBlock]->valid = true;
+                newCache->table[idx][emptyBlock]->dirty = true;
+
+                if (newCache->replacement_policy == "FIFO" || newCache->replacement_policy == "LRU")
+                {
+                    timer++;
+                    newCache->table[idx][emptyBlock]->toa = timer;
+                }
+
+                for (auto i : newCache->table[idx])
+                {
+                    if (i->tag == tag && i->valid)
+                    {
+                        string outputFile = fileName + ".output";
+                        // ofstream file(outputFile, ios::app);
+
+                        // file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Hit, Tag: 0x" << stoul(tag, 0, 2) << ", Dirty" << endl;
+
+                        // file.close();
+
+                        // put the value from the register to the cache
+                        for (int k = 0; k < size; k++)
+                        {
+                            i->data[stoi(offtag, 0, 2) + k] = (num >> (k * 8)) & 0xff;
+                        }
+                    }
+                }
+            }
+            else if (newCache->write_back_policy == "WT") // follow no write allocate policy if write through
+            {
+
+                // string outputFile = fileName + ".output";
+                // ofstream file(outputFile, ios::app);
+                // file << "W: Address: " << hex << "0x" << address << ", Set: 0x" << idx << ", Miss, Tag 0x" << stoul(tag, 0, 2) << ", Clean" << endl;
+                for (unsigned long k = 0; k < size; k++)
+                {
+                    memory[address + k] = (num >> (k * 8)) & 0xff; // little endian format
+                }
+            }
         }
     }
     else if (opcode[instr] == "1100011") // B type beq,bge,blt,bne,bltu,bgeu
     {
         vector<string> arguments;
         bool err;
-        pair<vector<string>, bool> res = getArguments(lineNum, 3, args, false);
+        pair<vector<string>, bool> res = getArguments(pc / 4 + 1, 3, args, false);
         err = res.second;
         arguments = res.first;
         if (err)
             return make_pair(-1, flag);
         int rs2, rs1, imm;
 
-        rs1 = getRegister(arguments[0], alias, lineNum);
-        rs2 = getRegister(arguments[1], alias, lineNum);
+        rs1 = getRegister(arguments[0], alias, pc / 4 + 1);
+        rs2 = getRegister(arguments[1], alias, pc / 4 + 1);
         if (rs2 == -1 || rs1 == -1)
             return make_pair(-1, flag);
-        if (checkRegister(rs2, lineNum) || checkRegister(rs1, lineNum))
+        if (checkRegister(rs2, pc / 4 + 1) || checkRegister(rs1, pc / 4 + 1))
         {
             return make_pair(-1, flag);
         }
@@ -1127,7 +1515,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         int curr_label = res1.first;
         if (curr_label > 4095 || curr_label < -4096)
         {
-            cout << "Line: " << lineNum << " value cannot be stored in 13 bits" << endl;
+            cout << "Line: " << (pc / 4 + 1) << " value cannot be stored in 13 bits" << endl;
             return make_pair(-1, flag);
         }
         int neg = (arguments[2][0] == '-' ? 1 : 0);
@@ -1157,11 +1545,11 @@ pair<int, bool> convert(string line, int pc, bool step)
         {
             ans = true;
         }
-        else if (instr == "bltu" && (unsigned long)registers[rs1] < (unsigned long)registers[rs2]) // unsigned comparison
+        else if (instr == "bltu" && (unsigned long)registers[rs1] < (unsigned long)registers[rs2])
         {
             ans = true;
         }
-        else if (instr == "bgeu" && (unsigned long)registers[rs1] >= (unsigned long)registers[rs2]) // unsigned comparison
+        else if (instr == "bgeu" && (unsigned long)registers[rs1] >= (unsigned long)registers[rs2])
         {
             ans = true;
         }
@@ -1182,14 +1570,14 @@ pair<int, bool> convert(string line, int pc, bool step)
         int count = 0;
         int index = 0;
         int prev = -1;
-        arguments = getArguments(lineNum, 2, args, false).first;
+        arguments = getArguments(pc / 4 + 1, 2, args, false).first;
 
         int rd, imm;
 
-        rd = getRegister(arguments[0], alias, lineNum);
+        rd = getRegister(arguments[0], alias, pc / 4 + 1);
         if (rd == -1)
             return make_pair(-1, flag);
-        if (checkRegister(rd, lineNum))
+        if (checkRegister(rd, pc / 4 + 1))
         {
             return make_pair(-1, flag);
         }
@@ -1198,7 +1586,7 @@ pair<int, bool> convert(string line, int pc, bool step)
         bool flag = getImmediate(arguments[1], pc, label, true).second;
         if (curr_label > 1048575 || curr_label < -1048576)
         {
-            cout << "Line: " << lineNum << " value cannot be stored in 21 bits" << endl;
+            cout << "Line: " << (pc / 4 + 1) << " value cannot be stored in 21 bits" << endl;
             return make_pair(-1, flag);
         }
         imm = curr_label;
@@ -1223,7 +1611,7 @@ pair<int, bool> convert(string line, int pc, bool step)
     }
     else if (opcode[instr] == "0110111") // lui
     {
-        pair<vector<string>, bool> res = getArguments(lineNum, 2, args, false);
+        pair<vector<string>, bool> res = getArguments(pc / 4 + 1, 2, args, false);
         bool err = res.second;
         vector<string> arguments = res.first;
         if (err)
@@ -1231,10 +1619,10 @@ pair<int, bool> convert(string line, int pc, bool step)
         int rd;
         int imm;
 
-        rd = getRegister(arguments[0], alias, lineNum);
+        rd = getRegister(arguments[0], alias, pc / 4 + 1);
         if (rd == -1)
             return make_pair(-1, flag);
-        if (checkRegister(rd, lineNum))
+        if (checkRegister(rd, pc / 4 + 1))
         {
             return make_pair(-1, flag);
         }
@@ -1243,7 +1631,7 @@ pair<int, bool> convert(string line, int pc, bool step)
 
         if (val[0] == '-')
         {
-            cout << "Line: " << lineNum << " value cannot be negative" << endl;
+            cout << "Line: " << (pc / 4 + 1) << " value cannot be negative" << endl;
             return make_pair(-1, flag);
         }
         size_t i = 0;
@@ -1258,12 +1646,12 @@ pair<int, bool> convert(string line, int pc, bool step)
         }
         if (i != val.length())
         {
-            cout << "Line " << lineNum << " : Wrong immediate value " << endl;
+            cout << "Line " << (pc / 4 + 1) << " : Wrong immediate value " << endl;
             return make_pair(-1, flag);
         }
         if (imm >> 31 > 0)
         {
-            cout << "Line " << lineNum << " Immediate value cannot be stored in 20 bits" << endl;
+            cout << "Line " << (pc / 4 + 1) << " Immediate value cannot be stored in 20 bits" << endl;
             return make_pair(-1, flag);
         }
         long int imm2 = (long)imm;
@@ -1360,7 +1748,7 @@ bool loadProgram(string file)
 /*
     Runs the entire code starting from the current PC
 */
-void run(bool toPrint)
+void run(bool toPrint,bool cacheEnabled, cache* newCache)
 {
     int numLines = lines.size();
     if (mainPC / 4 >= numLines)
@@ -1376,7 +1764,7 @@ void run(bool toPrint)
             mainPC += 4;
             continue;
         }
-        pair<int, bool> ans = convert(lines[mainPC / 4].second, mainPC, false);
+        pair<int, bool> ans = convert(lines[mainPC / 4].second, mainPC, false, cacheEnabled,newCache);
         int res = ans.first;
         bool flag = ans.second;
         if (res == -2) // -2: breakpoint, -1, 0: normal
@@ -1426,6 +1814,7 @@ void run(bool toPrint)
         printRegs();
         cout << endl;
         printMem(0x10000, 1);
+        printCacheRes(newCache);
     }
 
     while (!st.empty())
@@ -1437,7 +1826,7 @@ void run(bool toPrint)
 /*
     Step by step execution after the execution is stopped by breakpoint or from the start itself
 */
-void step(bool toPrint)
+void step(bool toPrint,bool cacheEnabled, cache* newCache)
 {
     if (mainPC / 4 >= lines.size())
     {
@@ -1458,10 +1847,11 @@ void step(bool toPrint)
             printRegs();
             cout << endl;
             printMem(0x10000, 1);
+            printCacheRes(newCache);
         }
         return;
     }
-    pair<int, bool> ans = convert(lines[mainPC / 4].second, mainPC, true);
+    pair<int, bool> ans = convert(lines[mainPC / 4].second, mainPC, true,cacheEnabled,newCache);
     int res = ans.first;
     bool flag = ans.second;
     if (res == -2) // -2: breakpoint, -1, 0: normal
@@ -1514,17 +1904,18 @@ void step(bool toPrint)
         printRegs();
         cout << endl;
         printMem(0x10000, 1);
+        printCacheRes(newCache);
     }
 }
 
-void updateStatus(int pc)
+void updateStatus(int pc, bool cacheEnabled, cache* newCache)
 {
 
     int stepsRequired = pc / 4;
 
     for (int i = 0; i < stepsRequired; ++i)
     {
-        step(false);
+        step(false,cacheEnabled,newCache );
     }
 }
 
@@ -1535,7 +1926,7 @@ void printMem(unsigned long address, int count)
 {
     for (int i = 0; i < 0x3ff; i++)
     {
-
+        
         cout << "0x" << hex << (unsigned long)(memory[address + i]) << endl;
     }
 }
@@ -1580,4 +1971,10 @@ void showStack()
         cout << stTemp1.top().first << ":" << stTemp1.top().second << endl;
         stTemp1.pop();
     }
+}
+
+
+void printCacheRes(cache* newCache){
+    cout << newCache->hits << endl;
+    cout << newCache->misses << endl;
 }

@@ -14,18 +14,36 @@ app.use(express.static('./public')); // Serve static files if needed
 
 io.on('connection', (socket) => {
     console.log('A client connected');
-
+    
     // Handle "getData" event
-    socket.on('getData', async ({ code, arg, pc }) => {
+    socket.on('getData', async ({ code, arg, pc , cacheConfig}) => {
         console.log('Received arg:', arg);
         console.log('Received pc:', pc);
-
+        console.log('Received cacheConfig:', cacheConfig);
         let gpc = pc;
 
         try {
             // Write the code to a file asynchronously
             await fs.writeFile('./Simulator/input.s', code);
-            console.log('File written successfully');
+            console.log('Code File written successfully');
+            
+            var fileContent  = ''
+            for(const [key, value] of Object.entries(cacheConfig)){
+                fileContent += `${value}\n`
+                console.log(`key:${key} value:${value}`);
+            }
+
+            console.log(`cacheConfig:${fileContent}`);
+
+            await fs.writeFile('./Simulator/cacheConfig.txt', fileContent, (err) => {
+                if (err) {
+                    console.error('Error writing to file', err);
+                    socket.emit('error', { success: false, message: 'Internal Server Error' });
+                }
+            });
+
+            console.log("cacheConfig written successfully");
+            
 
             const simProcess = spawn('./riscv_sim', [arg, gpc], { cwd: './Simulator' });
             console.log(`./riscv_sim ${arg} ${gpc}`);
@@ -55,6 +73,8 @@ io.on('connection', (socket) => {
                 let isRegisters = true;
                 let registerCount = 0;
                 let memCount = 0;
+                let hits = 0;
+                let misses = 0;
 
                 statuslog = lines[0];
                 console.log(`Printing log: ${statuslog}`);
@@ -66,7 +86,10 @@ io.on('connection', (socket) => {
                         success: true,
                         registers: { "x1": 0 },
                         memory: { "0x10000": 0 },
-                        statuslog: statuslog
+                        statuslog: statuslog,
+                        gpc: gpc,
+                        hits : hits,
+                        misses : misses
                     });
                 } else {
                     for (let i = 1; i < lines.length; i++) {
@@ -78,22 +101,30 @@ io.on('connection', (socket) => {
                         if (isRegisters) {
                             registers[`x${registerCount}`] = lines[i];
                             registerCount++;
-                        } else {
+                        } else if(memCount<1023) {
                             const address = `0x${(0x10000 + memCount).toString(16)}`;
                             memory[address] = lines[i]; // Map address to value
                             memCount++;
                         }
+                        else{
+                            hits = lines[i];
+                            misses = lines[i+1];
+                            break;
+                        }
                     }
+                    console.log("emitting response");
                     socket.emit('response', {
                         success: true,
                         registers: registers,
                         memory: memory,
                         statuslog: statuslog,
-                        gpc: gpc
+                        gpc: gpc,
+                        hits: hits,
+                        misses: misses
                     });
                 }
             });
-
+            
             simProcess.on('error', (error) => {
                 console.error('Error executing simulator', error);
                 socket.emit('error', { success: false, message: 'Simulator execution failed' });

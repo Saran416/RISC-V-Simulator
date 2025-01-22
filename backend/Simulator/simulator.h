@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+#include "cache_simulator.h"
 
 using namespace std;
 
@@ -20,14 +21,14 @@ bool loadProgram(string file);
 /*
     Runs the entire code starting from the current PC
 */
-void run(bool flag);
+void run(bool flag, bool cacheEnabled, cache *newCache);
 
 /*
     Step by step execution after the execution is stopped by breakpoint or from the start itself
 */
-void step(bool flag);
+void step(bool flag, bool cacheEnabled, cache *newCache);
 
-void updateStatus(int pc);
+void updateStatus(int pc, bool cacheEnabled, cache *newCache);
 
 void setPc(int pc);
 
@@ -50,3 +51,7 @@ void removeBreakpoint(int lineNumber);
     Prints the call stack
 */
 void showStack();
+
+void printCacheRes(cache *newCache);
+
+void changeCacheConfigFile(string file);
