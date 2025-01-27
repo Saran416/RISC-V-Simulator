@@ -1,4 +1,4 @@
-lui x3, 0x10
-ld x4,0(x3)
-ld x5, 0(x3)
-ld x6, 0(x3)
+.data
+.text
+addi x1, x0, 1
+add x2, x1, x1

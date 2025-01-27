@@ -113,6 +113,7 @@ io.on('connection', (socket) => {
                         }
                     }
                     console.log("emitting response");
+                    console.log("gpc is" , gpc);
                     socket.emit('response', {
                         success: true,
                         registers: registers,
@@ -139,7 +140,7 @@ io.on('connection', (socket) => {
     // Handle "setzero" event
     socket.on('setzero', () => {
         gpc = 0;
-        socket.emit('response', { success: true, message: 'PC set to zero' });
+        // socket.emit('response', { success: true, message: 'PC set to zero' });
     });
 
     // Handle "hexInstructions" event
@@ -167,7 +168,7 @@ io.on('connection', (socket) => {
                     hexInstructions.push(lines[i]);
                 }
 
-                socket.emit('response', { success: true, hexInstructions: hexInstructions });
+                socket.emit('hex_response', { success: true, hexInstructions: hexInstructions });
             });
 
             simProcess.on('error', (error) => {

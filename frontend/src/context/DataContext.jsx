@@ -89,6 +89,28 @@ export const DataContextProvider = ({ children }) => {
         setErr(data);
     }, []);
 
+    const [cacheConfig, setCacheConfig] = useState({
+        size: 1024,
+        blockSize: 64,
+        associativity: 4,
+        replacementPolicy: "LRU",
+        writePolicy: "Write Back"
+    });
+
+    const updateCacheConfig = useCallback((data)=>{
+        setCacheConfig(data);
+    } , []);
+
+    const [hits, setHits] = useState(0);
+    const [misses, setMisses] = useState(0);
+
+    const updateHits = useCallback((data)=>{
+        setHits(data)
+    }, []);
+
+    const updateMisses = useCallback((data)=>{
+        setMisses(data)
+    },[]);
 
     const defaultInitialise = () =>{
         setRegs({
@@ -129,7 +151,8 @@ export const DataContextProvider = ({ children }) => {
     }
 
     return (
-        <DataContext.Provider value={{ err, regs, mem, log, pc, updateLog,updateMem, updateRegs, defaultInitialise, updateErr, updatePc }}>
+        <DataContext.Provider value={{ err, regs, mem, log, pc, updateLog,updateMem, updateRegs, defaultInitialise, updateErr, updatePc, cacheConfig, updateCacheConfig, hits, updateHits, misses, updateMisses 
+         }}>
             {children}
         </DataContext.Provider>
     );

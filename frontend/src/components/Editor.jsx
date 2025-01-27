@@ -6,47 +6,66 @@ import runIcon from '../assets/run.svg';
 import stepIcon from '../assets/step.svg';
 import restartIcon from '../assets/restart.svg';
 import uploadIcon from '../assets/upload.svg';
-import { EditorView, Decoration, ViewPlugin } from '@codemirror/view';
+import { io } from "socket.io-client";
+import { Decoration, ViewPlugin } from '@codemirror/view';
 import './Editor.css';
+
+const socket = io("http://localhost:3000");
 
 const Editor = () => {
     const defaultText = `.data\n.text`;
     const [code, setCode] = useState(defaultText);
-    const [hex, setHex] = useState('1\n2\n3\n4\n5');
-    let offset = 0;
-    let number = 2;
-    const { updateRegs, updateMem, defaultInitialise, log, updateLog, err, updateErr, pc, updatePc } = useContext(DataContext);
+    const [hex, setHex] = useState('');
     const [highlightedLine, setHighlightedLine] = useState(1);
-
-    const getHex = async () => {
-        try{
-            const response = await fetch('http://localhost:3000/hexInstructions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code: code}),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch data');
-            }
-            const { hexInstructions } = await response.json();
-            setHex(hexInstructions.join('\n'));
-        }
-        catch (error) {
-            updateErr(true);
-            updateLog(error.message);
-            console.error('Error running code:', error);
-        }
-    }
+    const {updateRegs, updateMem, defaultInitialise, log, updateLog, err, updateErr, pc, updatePc, cacheConfig } = useContext(DataContext);
+    socket.emit('hexInstructions', {code});
 
     useEffect(() => {
         if (code !== defaultText) {
             localStorage.setItem('curr_code', code);
         }
-        getHex();
+        const connectHandler = () => console.log("Connected to server");
+        const responseHandler = (data) => {
+            console.log(data)
+            if(data.success){
+                updateRegs(data.registers);
+                updateMem(data.memory);
+                updateLog(data.statuslog);
+                updateErr(data.statuslog[0] !== 'E' && data.statuslog[0] !== 'C');
+                setHighlightedLine(calculateHighlightedLine(data.gpc))
+                updatePc(data.gpc);
+            }
+            else{
+                updateLog(data.message);
+                updateErr(true);
+            }
+        };
+
+        const hexHandler = (data) => {
+            // console.log("hex data" , data)
+            if(data.success){
+                let hexString = '';
+                data.hexInstructions.forEach(instruction => {
+                    hexString += instruction + '\n';
+                });
+                setHex(hexString);
+            }
+            else{
+                updateErr(true);
+                updateLog(data.message)
+            }
+        };
+        
+        socket.on("connect", connectHandler);
+        socket.on("response", responseHandler);
+        socket.on("hex_response", hexHandler)
+    
+        return () => {
+            socket.off("connect", connectHandler);
+            socket.off("response", responseHandler);
+        };
     }, [code]);
+    
 
     useEffect(() => {
         const savedCode = localStorage.getItem('curr_code');
@@ -55,126 +74,58 @@ const Editor = () => {
         }
     }, []);
 
-    const findTextLine = () => {
+    // Function to calculate the highlighted line based on the program counter (pc) and code content
+    function calculateHighlightedLine(pc) {
         const lines = code.split('\n');
-        number = lines.length;
-        for (let i = 0; i < lines.length; i++) {
-            if (lines[i].includes('.text')) {
-                return i + 1; // Return the 1-indexed line number
-            }
-        }
-        return 1;
-    };
-
-    useEffect(() => {
-        offset = findTextLine();
-        const newLineNumber = (pc / 4) + 1 + offset; // Assuming 4 bytes per line
-        setHighlightedLine(newLineNumber);
-    }, [pc, code]);
+        const offset = lines.map(line => line.trim()[0] === '.' ? 1 : 0).reduce((acc, curr, index) => curr === 1 ? index + 1 : acc, 0) + 1;
+        console.log("offset" , offset)
+        console.log("pc" , pc);
+        return Math.floor(pc / 4) + offset;
+    }
 
     const lineHighlightPlugin = ViewPlugin.fromClass(
         class {
             constructor(view) {
-                this.decorations = this.createHighlight(view, highlightedLine);
+                this.decorations = this.getDecorations(view);
             }
-
-            update(update) {
-                if (update.docChanged || update.transactions.length > 0) {
-                    this.decorations = this.createHighlight(update.view, highlightedLine);
+    
+            getDecorations(view) {
+                if (highlightedLine < 1 || highlightedLine > view.state.doc.lines) {
+                    return Decoration.none;
                 }
+                const line = view.state.doc.line(highlightedLine);
+                return Decoration.set([Decoration.line({ class: 'highlight-line' }).range(line.from)]);
             }
-
-            createHighlight(view, lineNumber) {
-                const line = view.state.doc.line(lineNumber);
-                return Decoration.set([
-                    Decoration.line({ attributes: { class: 'highlight-line' } }).range(line.from),
-                ]);
+    
+            update(update) {
+                if (update.docChanged || update.viewportChanged) {
+                    this.decorations = this.getDecorations(update.view);
+                }
             }
         },
         {
-            decorations: (plugin) => plugin.decorations,
+            decorations: (v) => v.decorations,
         }
     );
 
-    const runCode = async () => {
-        try {
-            const response = await fetch('http://localhost:3000/getData', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code: code, arg: 'run', pc: pc }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch data');
-            }
-
-            const { registers, memory, statuslog, gpc } = await response.json();
-            if (statuslog[0] === 'E' || statuslog[0] === 'C') {
-                updateLog(statuslog);
-                updateErr(false);
-                updatePc(0);
-            } else {
-                updateLog(statuslog);
-                updateErr(true);
-            }
-
-            if (Object.keys(registers).length !== 0 && (statuslog[0] === 'E' || statuslog[0] === 'C')) {
-                updateRegs(registers);
-                updateMem(memory);
-            }
-        } catch (error) {
-            updateErr(true);
-            updateLog(error.message);
-            console.error('Error running code:', error);
-        }
-    };
-    
-    const stepCode = async () => {
-        try {
-            const response = await fetch('http://localhost:3000/getData', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code: code, arg: 'step', pc: pc }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch data');
-            }
-
-            const { registers, memory, statuslog, gpc } = await response.json();
-            if (statuslog[0] === 'E' || statuslog[0] === 'C') {
-                updateLog(statuslog);
-                updateErr(false);
-                updatePc(gpc);
-            } else if (statuslog === '') {
-                updateLog('Nothing to step');
-                updateErr(true);
-            } else {
-                updateLog(statuslog);
-                updateErr(true);
-            }
-
-            if (Object.keys(registers).length !== 0 && (statuslog[0] === 'E' || statuslog[0] === 'C')) {
-                updateRegs(registers);
-                updateMem(memory);
-            }
-        } catch (error) {
-            updateErr(true);
-            updateLog(error.message);
-            console.error('Error running code:', error);
-        }
+    // run code 
+    const runCode = () => {
+        socket.emit("getData", { code, arg: "run", pc, cacheConfig });
+        updatePc(0);
     };
 
-    const restart = async () => {
-        updateLog('Reset Successful');
-        updateErr(false);
-        await fetch('http://localhost:3000/setzero', { method: 'GET' });
+    const stepCode = () => {
+        socket.emit("getData", { code, arg: "step", pc, cacheConfig });
+        updatePc((prevPc) => prevPc + 4);
+    };
+
+    const restart = () => {
+        socket.emit("setzero");
         defaultInitialise();
         updatePc(0);
+        updateErr(false);
+        updateLog("Reset Successful");
+        setHighlightedLine(calculateHighlightedLine(0));
     };
 
     const handleFileUpload = (event) => {
@@ -205,7 +156,7 @@ const Editor = () => {
                     <input
                         id="file-upload"
                         type="file"
-                        accept=".s, .txt"
+                        accept=".s"
                         onChange={handleFileUpload}
                         style={{ display: 'none' }}
                     />
@@ -227,17 +178,21 @@ const Editor = () => {
                     {err ? <div className="error">{log}</div> : <div className="log">{log}</div>}
                 </div>
             </div>
-            
+
             <div className="editor">
                 <CodeMirror
                     value={code}
-                    extensions={[dracula, lineHighlightPlugin]}
+                    extensions={[
+                        dracula,
+                        lineHighlightPlugin,
+                    ]}
+                    // extensions={[dracula, lineHighlightPlugin]}
                     onChange={(data) => setCode(data)}
                 />
                 <CodeMirror
                     value={hex}
-                    extensions={[dracula, lineHighlightPlugin]}
-                    className='hexes'
+                    extensions={[dracula]}
+                    className="hexes"
                     editable={false}
                     basicSetup={{ lineNumbers: false }}
                 />

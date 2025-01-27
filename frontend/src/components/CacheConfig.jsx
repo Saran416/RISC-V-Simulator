@@ -1,29 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import './CacheConfig.css'; 
+import { DataContext } from '../context/DataContext.jsx';
 
 const CacheConfig = () => {
+  const {cacheConfig, updateCacheConfig, hits, updateHits, misses, updateMisses} = useContext(DataContext);
+  const {size, blockSize, associativity, writePolicy, replacementPolicy} = cacheConfig;
   const [isCacheEnabled, setIsCacheEnabled] = useState(false);
-  const [cacheAssociativity, setCacheAssociativity] = useState(1); 
-  const [blockSize, setBlockSize] = useState(16); 
-  const [cacheSize, setCacheSize] = useState(64);
-  const [replacementPolicy, setReplacementPolicy] = useState('LRU');
-  const [writePolicy, setWritePolicy] = useState('Write Back');
-
-  const [hits, setHits] = useState(0);
   const [accesses, setAccesses] = useState(0);
-  const [misses, setMisses] = useState(0);
   const [hitRate, setHitRate] = useState('0%');
 
+  useEffect(() => {
+    calculateHitRate();
+  }, [hits, misses]);
+
+  // console.log("cache config" , cacheConfig)
   const calculateHitRate = () => {
     const rate = accesses > 0 ? ((hits / accesses) * 100).toFixed(2) + '%' : '0%';
     setHitRate(rate);
   };
 
   const toggleCache = () => {
-    setIsCacheEnabled(!isCacheEnabled);
-    setHits(0);
+    setIsCacheEnabled((val)=>{return !val});
+    updateHits(0);
     setAccesses(0);
-    setMisses(0);
+    updateMisses(0);
     setHitRate('0%');
   };
 
@@ -43,9 +43,9 @@ const CacheConfig = () => {
             <input
               type="number"
               id="associativity"
-              value={cacheAssociativity}
+              value={associativity}
               min="1"
-              onChange={(e) => setCacheAssociativity(Number(e.target.value))}
+              onChange={(e) => updateCacheConfig((prev) => ({ ...prev, associativity: Number(e.target.value) }))}
             />
           </div>
 
@@ -56,7 +56,7 @@ const CacheConfig = () => {
               id="blockSize"
               value={blockSize}
               min="1"
-              onChange={(e) => setBlockSize(Number(e.target.value))}
+              onChange={(e) => updateCacheConfig((prev) => ({ ...prev, blockSize: Number(e.target.value)}))}
             />
           </div>
 
@@ -65,9 +65,9 @@ const CacheConfig = () => {
             <input
               type="number"
               id="cacheSize"
-              value={cacheSize}
+              value={size}
               min="1"
-              onChange={(e) => setCacheSize(Number(e.target.value))}
+              onChange={(e) => updateCacheConfig((prev) => ({ ...prev, s: Nizeumber(e.target.value)}))}
             />
           </div>
 
@@ -76,7 +76,7 @@ const CacheConfig = () => {
             <select
               id="replacementPolicy"
               value={replacementPolicy}
-              onChange={(e) => setReplacementPolicy(e.target.value)}
+              onChange={(e) => updateCacheConfig((prev) => ({ ...prev, replacementPolicy: (e.target.value)}))}
             >
               <option value="LRU">LRU (Least Recently Used)</option>
               <option value="FIFO">FIFO (First In First Out)</option>
@@ -89,7 +89,7 @@ const CacheConfig = () => {
             <select
               id="writePolicy"
               value={writePolicy}
-              onChange={(e) => setWritePolicy(e.target.value)}
+              onChange={(e) => updateCacheConfig((prev) => ({ ...prev, writePolicy: (e.target.value)}))}
             >
               <option value="Write Back">Write Back</option>
               <option value="Write Through">Write Through</option>

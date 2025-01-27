@@ -131,7 +131,7 @@
 }
 
 .highlight-line {
-    background-color: rgb(255, 115, 115) !important; /* Light red background */
+    background: linear-gradient(to right, transparent, rgb(255, 115, 115)) !important;
 }
 
 .cm-content {
