@@ -4,6 +4,12 @@
 
 This project is a web application built around a C++ cache simulator. The simulator models the behavior of a cache memory system and supports RISC-V instructions. The web app provides an interactive interface for users to configure the cache, execute instructions, and visualize the state of registers, memory, and cache.
 
+## Demo Images
+
+![Editor](/demo/1.png)
+![Memory](/demo/2.png)
+![Cache](/demo/3.png)
+
 ## Features
 
 ### Simulator (Backend)
@@ -125,9 +131,3 @@ You can create your own local copy of the simulator by following the below steps
 ## Contributors
 
 A collaborative projects of [lakshsidhu04](https://github.com/lakshsidhu04) and [Saran416](https://github.com/Saran416)
-
-
-
-## License
-
-
