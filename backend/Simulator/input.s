@@ -1,16 +1,9 @@
 .data
-.dword 56, 98
+.word 10, 20, 30, 40
 .text
-lui x5, 0x10
-ld x11, 0(x5)
-ld x12, 8(x5)
-
-gcd_loop: beq x12, x0, done
-add x14, x11, x12
-add x14, x14, x12
-sub x13, x11, x14
-add x11, x12, x0
-add x12, x13, x0
-beq x0, x0, gcd_loop
-
-done: addi x0, x0, 1
+lui x10,0x10
+lw x11, 0(x10)   
+lw x12, 4(x10)
+lw x13, 8(x10)
+lw x14, 12(x10)
+addi x4,x3,1
