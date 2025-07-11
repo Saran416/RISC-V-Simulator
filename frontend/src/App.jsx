@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import Memory from './pages/Memory.jsx'
 import Cache from './pages/Cache.jsx'
+import About from './pages/About.jsx'
 import { Navigate } from 'react-router-dom'
 import { DataContextProvider } from './context/DataContext.jsx'
 
@@ -13,6 +14,7 @@ const App = () => {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About/>}/>
           <Route path="/memory" element={<Memory />} />
           <Route path="/cache" element={<Cache/>}/>
           <Route path='*' element={<Navigate to='/' />} />

@@ -1,0 +1,21 @@
+.main{
+    width: 100%;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    padding: 5em;
+}
+
+.about{
+    height: auto;
+    background-color: #282a36;
+    border-radius: 1em;
+    padding: 2em;
+    font-size: 1.5em;
+    font-family: monospace;
+}
+
+a {
+    color: #8be9fd;
+    text-decoration: underline;
+}

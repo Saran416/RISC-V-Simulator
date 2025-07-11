@@ -7,8 +7,6 @@ import './Home.css'
 
 
 const Home = () => {
-  console.log("test");
-  // const runFile = async () => {
   const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth <= 1330);
 
   useEffect(() => {
