@@ -15,50 +15,43 @@ const socket = io("http://localhost:3000");
 const Editor = () => {
     const defaultText = `.data\n.text`;
     const [code, setCode] = useState(defaultText);
-    const [hex, setHex] = useState('');
     const [highlightedLine, setHighlightedLine] = useState(1);
-    const {updateRegs, updateMem, defaultInitialise, log, updateLog, err, updateErr, pc, updatePc, cacheConfig } = useContext(DataContext);
-    socket.emit('hexInstructions', {code});
+    const {updateRegs, updateMem, defaultInitialise, log, updateLog, err, updateErr, pc, updatePc, cacheConfig, updateHits, updateMisses } = useContext(DataContext);
 
     useEffect(() => {
         if (code !== defaultText) {
             localStorage.setItem('curr_code', code);
         }
+
         const connectHandler = () => console.log("Connected to server");
+
         const responseHandler = (data) => {
             console.log(data)
             if(data.success){
+                updateErr(data.statuslog[0] !== 'E' && data.statuslog[0] !== 'C');
+
+                if(data.statuslog[0] !== 'E' && data.statuslog[0] !== 'C'){
+                    defaultInitialise();
+                    updateLog(data.statuslog);
+                    return;
+                }
+
                 updateRegs(data.registers);
                 updateMem(data.memory);
                 updateLog(data.statuslog);
-                updateErr(data.statuslog[0] !== 'E' && data.statuslog[0] !== 'C');
                 setHighlightedLine(calculateHighlightedLine(data.gpc))
                 updatePc(data.gpc);
+                updateHits(data.hits);
+                updateMisses(data.misses);
             }
             else{
                 updateLog(data.message);
                 updateErr(true);
             }
         };
-
-        const hexHandler = (data) => {
-            // console.log("hex data" , data)
-            if(data.success){
-                let hexString = '';
-                data.hexInstructions.forEach(instruction => {
-                    hexString += instruction + '\n';
-                });
-                setHex(hexString);
-            }
-            else{
-                updateErr(true);
-                updateLog(data.message)
-            }
-        };
         
         socket.on("connect", connectHandler);
         socket.on("response", responseHandler);
-        socket.on("hex_response", hexHandler)
     
         return () => {
             socket.off("connect", connectHandler);
@@ -78,8 +71,8 @@ const Editor = () => {
     function calculateHighlightedLine(pc) {
         const lines = code.split('\n');
         const offset = lines.map(line => line.trim()[0] === '.' ? 1 : 0).reduce((acc, curr, index) => curr === 1 ? index + 1 : acc, 0) + 1;
-        console.log("offset" , offset)
-        console.log("pc" , pc);
+        // console.log("offset" , offset)
+        // console.log("pc" , pc);
         return Math.floor(pc / 4) + offset;
     }
 
@@ -111,12 +104,13 @@ const Editor = () => {
     // run code 
     const runCode = () => {
         socket.emit("getData", { code, arg: "run", pc, cacheConfig });
-        updatePc(0);
+        // updatePc(0);
     };
 
+    // step code
     const stepCode = () => {
         socket.emit("getData", { code, arg: "step", pc, cacheConfig });
-        updatePc((prevPc) => prevPc + 4);
+        // updatePc((prevPc) => prevPc + 4);
     };
 
     const restart = () => {
@@ -186,15 +180,7 @@ const Editor = () => {
                         dracula,
                         lineHighlightPlugin,
                     ]}
-                    // extensions={[dracula, lineHighlightPlugin]}
                     onChange={(data) => setCode(data)}
-                />
-                <CodeMirror
-                    value={hex}
-                    extensions={[dracula]}
-                    className="hexes"
-                    editable={false}
-                    basicSetup={{ lineNumbers: false }}
                 />
             </div>
         </div>

@@ -3,14 +3,30 @@ import { createContext } from 'react';
 
 export const DataContext = createContext({
     regs: {},
-    mem: {},
     updateRegs: () => {},
+
+    mem: {},
     updateMem: () => {},
+
     defaultInitialise: () => {},
+
     log: '',
     updateLog: () => {},
+
     err: false,
     updateErr: () => {},
+
+    cacheConfig: {},
+    updateCacheConfig: () => {},
+
+    pc: 0,
+    updatePc: () => {},
+
+    hits: 0,
+    updateHits: () => {},
+
+    misses: 0,
+    updateMisses: () => {},
 });
 
 export const DataContextProvider = ({ children }) => {
@@ -57,7 +73,7 @@ export const DataContextProvider = ({ children }) => {
         return acc;
     }, {});
     
-    const [mem, setMem] = useState(initialMemory);
+    const [mem, setMem] = useState(initialMemory); // Initialize memory state with the initial memory object
 
     const [log,setLog] = useState('');  // Initialize log state
 
@@ -65,18 +81,28 @@ export const DataContextProvider = ({ children }) => {
 
     const [pc, setPc] = useState(0);  // Initialize program counter
 
+    const [hits, setHits] = useState(0); // Initialize cache hits
+
+    const [misses, setMisses] = useState(0); // Initialize cache misses
+
+    const [cacheConfig, setCacheConfig] = useState({ // Initialize cache configuration
+        size: 1024,
+        blockSize: 64,
+        associativity: 4,
+        replacementPolicy: "LRU",
+        writePolicy: "Write Back"
+    });
+
     const updatePc = useCallback((data) => {
         setPc(data);
     }, []);
 
-    // Update registers state
     const updateRegs = useCallback((data) => {
         if (Object.keys(data).length !== 0) {
             setRegs(data);
         }
     }, []);
 
-    // Update memory state
     const updateMem = useCallback((data) => {        
         setMem(data);
     }, []);
@@ -89,20 +115,9 @@ export const DataContextProvider = ({ children }) => {
         setErr(data);
     }, []);
 
-    const [cacheConfig, setCacheConfig] = useState({
-        size: 1024,
-        blockSize: 64,
-        associativity: 4,
-        replacementPolicy: "LRU",
-        writePolicy: "Write Back"
-    });
-
     const updateCacheConfig = useCallback((data)=>{
         setCacheConfig(data);
     } , []);
-
-    const [hits, setHits] = useState(0);
-    const [misses, setMisses] = useState(0);
 
     const updateHits = useCallback((data)=>{
         setHits(data)
@@ -148,6 +163,8 @@ export const DataContextProvider = ({ children }) => {
             "x31": "0x0",
         });
         setMem(initialMemory);
+        setHits(0);
+        setMisses(0);
     }
 
     return (

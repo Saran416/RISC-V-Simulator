@@ -3,10 +3,10 @@ import "./Mem.css";
 import { DataContext } from "../context/DataContext.jsx";
 
 const Mem = () => {
-  const { mem } = useContext(DataContext);  // Getting memory from context
-  const baseAddress = 0x10000;  // Starting address for memory
-  const rowsPerPage = 20;  // Number of rows to display per page (8 bytes per row)
-  const [startIndex, setStartIndex] = useState(0);  // Current page index
+  const { mem } = useContext(DataContext); 
+  const baseAddress = 0x10000;
+  const rowsPerPage = 20;
+  const [startIndex, setStartIndex] = useState(0);
 
   // Convert memory object into an array grouped by lines of 8 bytes
   const memArray = Array.from({ length: Math.ceil(Object.keys(mem).length / 8) }, (_, i) => {
@@ -66,7 +66,7 @@ const Mem = () => {
         <h1>Byte 6</h1>
         <h1>Byte 7</h1>
       </div>
-      {renderRows()}  {/* Render memory rows */}
+      {renderRows()}
       <div className="buttons">
         <button onClick={handlePreviousPage} disabled={startIndex === 0}>
           Previous {rowsPerPage} Rows
